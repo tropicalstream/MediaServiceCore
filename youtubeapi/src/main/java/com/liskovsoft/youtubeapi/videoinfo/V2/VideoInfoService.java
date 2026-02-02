@@ -187,10 +187,6 @@ public class VideoInfoService extends VideoInfoServiceBase {
     }
 
     private VideoInfo getVideoInfo(AppClient client, String videoId, String clickTrackingParams) {
-        //if (client.isPlaybackBroken()) {
-        //    return null;
-        //}
-
         mRecentInfoType = client;
 
         if (client == AppClient.INITIAL) {
