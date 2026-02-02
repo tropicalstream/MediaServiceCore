@@ -87,7 +87,8 @@ public class PlaylistServiceWrapper extends PlaylistService {
                 firstIdxShift++;
                 // Replace local pl with remote one
                 if (playlistsInfos != null && !playlistsInfos.isEmpty()) {
-                    PlaylistInfo item = findFirst(playlistsInfos, itemGroup.getTitle()); // More robust to find by id?
+                    //PlaylistInfo item = findFirst(playlistsInfos, itemGroup.getTitle()); // More robust to find by id?
+                    PlaylistInfo item = findFirst(playlistsInfos, itemGroup.getId());
                     if (item != null) {
                         if (!result.contains(item)) {
                             result.add(item);
@@ -227,9 +228,10 @@ public class PlaylistServiceWrapper extends PlaylistService {
         }
     }
 
-    // More robust to find by id?
     private PlaylistInfo findFirst(List<PlaylistInfo> playlistsInfos, String title) {
-        return Helpers.findFirst(playlistsInfos, item -> Helpers.equals(item.getTitle(), title));
+        // More robust to find by id?
+        //return Helpers.findFirst(playlistsInfos, item -> Helpers.equals(item.getTitle(), title));
+        return Helpers.findFirst(playlistsInfos, item -> Helpers.equals(item.getPlaylistId(), title));
     }
 
     private String findTitle(String playlistId) {
