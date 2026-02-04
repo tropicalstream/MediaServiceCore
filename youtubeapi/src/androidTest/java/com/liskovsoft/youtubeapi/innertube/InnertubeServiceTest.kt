@@ -27,14 +27,14 @@ class InnertubeServiceTest {
 
     @Test
     fun testThatSessionDataNotEmpty() {
-        val sessionData = Session.getSessionDataResult()
+        val sessionData = Session.getSessionDataResult(SessionArgs())
 
         Assert.assertNotNull("ytcfg not null", sessionData?.ytcfg?.apiKey)
     }
 
     @Test
     fun testThatDeviceInfoNotEmpty() {
-        val sessionData = Session.getSessionDataResult()
+        val sessionData = Session.getSessionDataResult(SessionArgs())
 
         Assert.assertNotNull("Device info not null", sessionData?.ytcfg?.deviceInfo)
         Assert.assertNotNull("Has visitor data", sessionData?.ytcfg?.deviceInfo?.visitorData)
@@ -42,7 +42,7 @@ class InnertubeServiceTest {
 
     @Test
     fun testThatInnertubeConfigNotEmpty() {
-        val sessionData = Session.getSessionDataResult()
+        val sessionData = Session.getSessionDataResult(SessionArgs())
         Assert.assertNotNull("session data not null", sessionData)
         val deviceInfo = sessionData!!.deviceInfo
         Assert.assertNotNull("session data/device info not null", deviceInfo)

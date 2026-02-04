@@ -62,9 +62,9 @@ internal class Session private constructor(
         fun getSessionData(options: SessionOptions? = null): SessionData? {
             // TODO: add caching of session data
 
-            val sessionData = getSessionDataResult() ?: return null
-
             val args = SessionArgs()
+
+            val sessionData = getSessionDataResult(args) ?: return null
 
             val context = buildContext(sessionData, args) ?: return null
 
@@ -88,9 +88,9 @@ internal class Session private constructor(
             )
         }
 
-        fun getSessionDataResult(): SessionDataResult? {
+        fun getSessionDataResult(args: SessionArgs): SessionDataResult? {
             val sessionApi = RetrofitHelper.create(SessionApi::class.java)
-            val sessionDataResult = sessionApi.getSessionData(ApiHelpers.createSessionDataHeaders())
+            val sessionDataResult = sessionApi.getSessionData(ApiHelpers.createSessionDataHeaders(args))
             return RetrofitHelper.get(sessionDataResult, false)
         }
 
