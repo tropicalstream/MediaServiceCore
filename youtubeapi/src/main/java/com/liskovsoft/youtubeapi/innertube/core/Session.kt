@@ -20,10 +20,6 @@ import retrofit2.http.POST
 
 @WithJsonPathSkip
 private interface SessionApi {
-    @Headers(
-        "Accept: */*",
-        "Referer: ${URLS.YT_BASE}/sw.js"
-    )
     @GET("${URLS.YT_BASE}/sw.js_data")
     fun getSessionData(@HeaderMap headers: Map<String, String>): Call<SessionDataResult?>
 }
@@ -31,10 +27,7 @@ private interface SessionApi {
 @WithGson
 private interface InnertubeConfigApi {
     @Headers(
-        "Content-Type: application/json",
-        "Accept: */*",
-        "Referer: ${URLS.YT_BASE}",
-        "X-Origin: ${URLS.YT_BASE}"
+        "Content-Type: application/json"
     )
     @POST("${URLS.API.PRODUCTION_1}v1/config")
     fun retrieveInnertubeConfig(@HeaderMap headers: Map<String, String>, @Body jsonConfig: String): Call<InnertubeConfigResult?>
@@ -68,11 +61,11 @@ internal class Session private constructor(
 
             val context = buildContext(sessionData, args) ?: return null
 
-            val innertubeConfig = retrieveInnertubeConfig(sessionData, context)
-            val coldConfigData = innertubeConfig?.responseContext?.globalConfigGroup?.rawColdConfigGroup?.configData
-            val coldHashData = innertubeConfig?.responseContext?.globalConfigGroup?.coldHashData
-            val hotHashData = innertubeConfig?.responseContext?.globalConfigGroup?.hotHashData
-            val configData = innertubeConfig?.configData
+            val innertubeConfig = retrieveInnertubeConfig(sessionData, context) ?: return null
+            val coldConfigData = innertubeConfig.responseContext?.globalConfigGroup?.rawColdConfigGroup?.configData
+            val coldHashData = innertubeConfig.responseContext?.globalConfigGroup?.coldHashData
+            val hotHashData = innertubeConfig.responseContext?.globalConfigGroup?.hotHashData
+            val configData = innertubeConfig.configData
 
             // TODO: store session data
 
