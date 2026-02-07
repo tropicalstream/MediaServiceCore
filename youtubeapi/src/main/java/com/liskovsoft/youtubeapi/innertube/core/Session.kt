@@ -46,10 +46,22 @@ internal class Session private constructor(
     val poToken: String? = null
 ) {
     companion object {
+        private var cached: Pair<String?, Session>? = null
+
         fun create(options: SessionOptions? = null): Session? {
+            cached?.let {
+                if (it.first == options?.playerId)
+                    return it.second
+            }
+
             val (apiKey, apiVersion, configData, context, userAgent, accountIndex) = getSessionData(options) ?: return null
 
-            return Session(context, apiKey, apiVersion, accountIndex, configData, userAgent, Player.create(options?.poToken, options?.playerId))
+            val session =
+                Session(context, apiKey, apiVersion, accountIndex, configData, userAgent, Player.create(options?.poToken, options?.playerId))
+
+            cached = Pair(options?.playerId, session)
+
+            return session
         }
 
         fun getSessionData(options: SessionOptions? = null): SessionData? {
@@ -96,6 +108,10 @@ internal class Session private constructor(
                     ApiHelpers.createInnertubeJsonConfig(context)
                 )
             return RetrofitHelper.get(innertubeConfigResult, false)
+        }
+
+        fun invalidate() {
+            cached = null
         }
 
         private fun buildContext(sessionData: SessionDataResult, options: SessionArgs): InnertubeContext? {

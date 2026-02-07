@@ -38,6 +38,7 @@ class InnertubeServiceTest {
 
         Assert.assertNotNull("Device info not null", sessionData?.ytcfg?.deviceInfo)
         Assert.assertNotNull("Has visitor data", sessionData?.ytcfg?.deviceInfo?.visitorData)
+        Assert.assertNotNull("App install data not null", sessionData?.ytcfg?.deviceInfo?.appInstallData)
     }
 
     @Test
@@ -64,6 +65,11 @@ class InnertubeServiceTest {
         val sessionDataProcessed = Session.getSessionData()
 
         Assert.assertNotNull("context not null", sessionDataProcessed?.context)
+        Assert.assertNotNull("Has appInstallData", sessionDataProcessed?.context?.client?.configInfo?.appInstallData)
+        Assert.assertNotNull("Has coldConfigData", sessionDataProcessed?.context?.client?.configInfo?.coldConfigData)
+        Assert.assertNotNull("Has coldHashData", sessionDataProcessed?.context?.client?.configInfo?.coldHashData)
+        Assert.assertNotNull("Has hotHashData", sessionDataProcessed?.context?.client?.configInfo?.hotHashData)
+        Assert.assertNotNull("Has configData", sessionDataProcessed?.configData)
     }
 
     @Test

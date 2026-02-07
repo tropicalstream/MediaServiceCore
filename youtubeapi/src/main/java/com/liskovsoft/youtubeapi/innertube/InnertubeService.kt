@@ -17,6 +17,11 @@ internal object InnertubeService {
 
         val formatInfo = MediaItemFormatInfoImpl(playerResult)
         session.player.decipher(formatInfo)
+
+        if (formatInfo.isUnplayable) {
+            Session.invalidate()
+        }
+
         return formatInfo
     }
 }
