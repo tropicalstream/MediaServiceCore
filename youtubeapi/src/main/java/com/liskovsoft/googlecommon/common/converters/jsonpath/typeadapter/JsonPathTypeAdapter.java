@@ -57,21 +57,12 @@ public class JsonPathTypeAdapter<T> {
             jsonContent = Helpers.toString(is);
         }
 
-        //long startTimeMs = System.currentTimeMillis();
-
         T result = (T) readType(getGenericType(), jsonContent);
 
-        if (result == null) {
-            // Dump root object
-            ReflectionHelper.dumpDebugInfo(getGenericType(), jsonContent);
-        }
-
-        //long endTimeMs = System.currentTimeMillis();
-        //
-        //Log.d(TAG, "Parse time is %s ms", endTimeMs - startTimeMs);
-
-        // Dumping all data for debug purposes
-        //ReflectionHelper.dumpDebugInfo(getGenericType(), jsonContent);
+        //if (result == null) {
+        //    // Dump root object
+        //    ReflectionHelper.dumpDebugInfo(getGenericType(), jsonContent);
+        //}
 
         return result;
     }
@@ -86,41 +77,6 @@ public class JsonPathTypeAdapter<T> {
     private Class<?> getGenericType() {
         return mType;
     }
-
-    //private Object readType(Class<?> type, String jsonContent) {
-    //    if (type == null || jsonContent == null) {
-    //        return null;
-    //    }
-    //
-    //    try {
-    //        Constructor<?> constructor = type.getConstructor();
-    //        final Object obj = constructor.newInstance();
-    //
-    //        DocumentContext parser = mParser.parse(jsonContent);
-    //
-    //        List<Field> fields = ReflectionHelper.getAllFields(type);
-    //
-    //        List<Boolean> results = RxUtils.fromIterable(fields)
-    //                .map(field -> processField(field, obj, type, parser))
-    //                .subscribeOn(Schedulers.io())
-    //                .observeOn(Schedulers.io())
-    //                .toList()
-    //                .blockingGet();
-    //
-    //        for (Boolean result : results) {
-    //            // At least one field is set
-    //            if (result) {
-    //                return obj;
-    //            }
-    //        }
-    //
-    //    } catch (Exception e) {
-    //        Log.e(TAG, e.getMessage());
-    //        e.printStackTrace();
-    //    }
-    //
-    //    return null;
-    //}
 
     private Object readType(Class<?> type, String jsonContent) {
         if (type == null || jsonContent == null) {
