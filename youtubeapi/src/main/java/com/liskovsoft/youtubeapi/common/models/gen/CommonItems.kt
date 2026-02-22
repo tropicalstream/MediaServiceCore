@@ -1,5 +1,6 @@
 package com.liskovsoft.youtubeapi.common.models.gen
 
+import com.liskovsoft.youtubeapi.browse.v2.gen.ChipItemWrapper
 import com.liskovsoft.youtubeapi.browse.v2.gen.ContinuationCommand
 import com.liskovsoft.youtubeapi.browse.v2.gen.ContinuationItemRenderer
 import com.liskovsoft.youtubeapi.browse.v2.gen.ReelWatchEndpoint
@@ -7,7 +8,6 @@ import com.liskovsoft.youtubeapi.next.v2.gen.ContinuationItem
 import com.liskovsoft.youtubeapi.next.v2.gen.EngagementPanel
 import com.liskovsoft.youtubeapi.next.v2.gen.LikeButtonRenderer
 import com.liskovsoft.youtubeapi.next.v2.gen.Menu
-import com.liskovsoft.youtubeapi.next.v2.gen.VideoMetadataRenderer
 import com.liskovsoft.youtubeapi.next.v2.gen.VideoOwnerItem
 
 internal data class NavigationEndpointItem(
@@ -412,39 +412,40 @@ internal data class InnertubeCommand(
     val watchEndpoint: WatchEndpointItem?,
     val showSheetCommand: ShowSheetCommand?,
     val feedbackEndpoint: FeedbackEndpoint?,
-    val continuationCommand: ContinuationCommand?
+    val continuationCommand: ContinuationCommand?,
+    val commandExecutorCommand: CommandExecutorCommand?
+)
+
+internal data class ShowSheetCommand(
+    val panelLoadingStrategy: PanelLoadingStrategy?
 ) {
-    data class ShowSheetCommand(
-        val panelLoadingStrategy: PanelLoadingStrategy?
+    data class PanelLoadingStrategy(
+        val inlineContent: InlineContent?
     ) {
-        data class PanelLoadingStrategy(
-            val inlineContent: InlineContent?
+        data class InlineContent(
+            val sheetViewModel: SheetViewModel?
         ) {
-            data class InlineContent(
-                val sheetViewModel: SheetViewModel?
+            data class SheetViewModel(
+                val content: Content?
             ) {
-                data class SheetViewModel(
-                    val content: Content?
+                data class Content(
+                    val listViewModel: ListViewModel?
                 ) {
-                    data class Content(
-                        val listViewModel: ListViewModel?
-                    ) {
-                        data class ListViewModel(
-                            val listItems: List<ListItem?>?
-                        ) {
-                            data class ListItem(
-                                val listItemViewModel: ListItemViewModel?
-                            ) {
-                                data class ListItemViewModel(
-                                    val rendererContext: RendererContext?
-                                )
-                            }
-                        }
-                    }
+                    data class ListViewModel(
+                        val listItems: List<ChipItemWrapper?>?
+                    )
                 }
             }
         }
     }
+}
+
+internal data class CommandExecutorCommand(
+    val commands: List<Command?>?
+) {
+    data class Command(
+        val continuationCommand: ContinuationCommand?
+    )
 }
 
 internal data class LockupItem(

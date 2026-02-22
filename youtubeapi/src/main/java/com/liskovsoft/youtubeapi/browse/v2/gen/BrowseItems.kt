@@ -57,7 +57,8 @@ internal data class ChipBarViewModel(
 
 internal data class ChipItemWrapper(
     val chipCloudChipRenderer: ChipCloudChipRenderer?,
-    val chipViewModel: ChipViewModel?
+    val chipViewModel: ChipViewModel?,
+    val listItemViewModel: ListItemViewModel?
 )
 
 // WhatToWatch only
@@ -146,7 +147,13 @@ internal data class ChipCloudChipRenderer(
 
 internal data class ChipViewModel(
     val text: String?,
+    val displayType: String?,
     val tapCommand: OnTap?
+)
+
+internal data class ListItemViewModel(
+    val title: TextItem?,
+    val rendererContext: RendererContext?
 )
 
 internal data class NavigationEndpoint(

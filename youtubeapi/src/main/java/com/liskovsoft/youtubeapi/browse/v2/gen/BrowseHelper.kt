@@ -3,6 +3,7 @@ package com.liskovsoft.youtubeapi.browse.v2.gen
 import com.liskovsoft.sharedutils.helpers.Helpers
 import com.liskovsoft.googlecommon.common.helpers.YouTubeHelper
 import com.liskovsoft.youtubeapi.common.models.gen.ItemWrapper
+import com.liskovsoft.youtubeapi.common.models.gen.ShowSheetCommand
 import com.liskovsoft.youtubeapi.common.models.gen.ThumbnailItem
 import com.liskovsoft.youtubeapi.common.models.gen.getBrowseId
 import com.liskovsoft.youtubeapi.common.models.gen.getContinuationToken
@@ -151,10 +152,21 @@ internal fun ChipCloudChipRenderer.getContinuationToken() = navigationEndpoint?.
 
 /////
 
-internal fun ChipBarViewModel.getChips(): List<ChipItemWrapper?>? = chips
+private const val CHIP_TYPE_DROP_DOWN = "CHIP_VIEW_MODEL_DISPLAY_TYPE_DROP_DOWN"
+private const val CHIP_TYPE_UNSPECIFIED = "CHIP_VIEW_MODEL_DISPLAY_TYPE_UNSPECIFIED"
+
+internal fun ChipBarViewModel.getChips(): List<ChipItemWrapper?>? = chips?.let {
+    it.firstOrNull()?.chipViewModel?.tapCommand?.innertubeCommand?.showSheetCommand?.getItems()
+} ?: chips
 
 internal fun ChipViewModel.getTitle() = text
 internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand?.continuationCommand?.token
+
+/////
+
+internal fun ListItemViewModel.getTitle() = title?.getText()
+internal fun ListItemViewModel.getContinuationToken() =
+    rendererContext?.commandContext?.onTap?.innertubeCommand?.commandExecutorCommand?.commands?.firstNotNullOfOrNull { it?.continuationCommand?.token }
 
 /////
 
@@ -163,8 +175,10 @@ internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand
  * Other regular shelfs in this case is empty
  */
 internal fun ChipItemWrapper.getShelfItems() = chipCloudChipRenderer?.content?.sectionListRenderer?.contents?.map { it?.shelfRenderer }
-internal fun ChipItemWrapper.getTitle() = chipCloudChipRenderer?.getTitle() ?: chipViewModel?.getTitle()
-internal fun ChipItemWrapper.getContinuationToken() = chipCloudChipRenderer?.getContinuationToken() ?: chipViewModel?.getContinuationToken()
+internal fun ChipItemWrapper.getTitle() = chipCloudChipRenderer?.getTitle() ?: chipViewModel?.getTitle() ?: listItemViewModel?.getTitle()
+internal fun ChipItemWrapper.getContinuationToken() = chipCloudChipRenderer?.getContinuationToken()
+    ?: chipViewModel?.getContinuationToken()
+    ?: listItemViewModel?.getContinuationToken()
 
 /////
 
@@ -267,4 +281,8 @@ internal fun Shelf.getContinuationToken(): String? = shelfRenderer?.getContinuat
     ?: (gridRenderer ?: shelfRenderer?.content?.gridRenderer)?.getContinuationToken()
     ?: playlistVideoListRenderer?.getContinuationToken()
 internal fun Shelf.containsShorts(): Boolean = shelfRenderer?.containsShorts() == true
+
+//////////
+
+internal fun ShowSheetCommand.getItems() = panelLoadingStrategy?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems
 
