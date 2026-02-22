@@ -395,20 +395,20 @@ class YouTubeContentService implements ContentService {
     }
 
     @Nullable
-    private List<MediaGroup> getChannelSorting(String channelId) {
+    private List<MediaGroup> getChannelSortingOptions(String channelId) {
         checkSigned();
 
-        return getBrowseService2().getChannelSorting(channelId);
+        return getBrowseService2().getChannelSortingOptions(channelId);
     }
 
     @Override
-    public Observable<List<MediaGroup>> getChannelSortingObserve(String channelId) {
-        return RxHelper.fromCallable(() -> getChannelSorting(channelId));
+    public Observable<List<MediaGroup>> getChannelSortingOptionsObserve(String channelId) {
+        return RxHelper.fromCallable(() -> getChannelSortingOptions(channelId));
     }
 
     @Override
-    public Observable<List<MediaGroup>> getChannelSortingObserve(MediaItem item) {
-        return item != null && item.getChannelId() != null ? getChannelSortingObserve(item.getChannelId()) : null;
+    public Observable<List<MediaGroup>> getChannelSortingOptionsObserve(MediaItem item) {
+        return item != null && item.getChannelId() != null ? getChannelSortingOptionsObserve(item.getChannelId()) : null;
     }
 
     @Override

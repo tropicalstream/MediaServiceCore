@@ -138,15 +138,6 @@ internal fun PlaylistVideoListRenderer.getContinuationToken() = continuations?.f
 
 ////////
 
-/**
- * In some cases chip item contains multiple shelfs<br/>
- * Other regular shelfs in this case is empty
- */
-internal fun ChipItem.getShelfItems() = chipCloudChipRenderer?.content?.sectionListRenderer?.contents?.map { it?.shelfRenderer }
-internal fun ChipItem.getTitle() = chipCloudChipRenderer?.text?.getText()
-
-//////
-
 internal fun NextVideoItem.getVideoId() = endpoint?.watchEndpoint?.videoId
 internal fun NextVideoItem.getTitle() = item?.previewButtonRenderer?.title?.getText()
 internal fun NextVideoItem.getAuthor() = item?.previewButtonRenderer?.byline?.getText()

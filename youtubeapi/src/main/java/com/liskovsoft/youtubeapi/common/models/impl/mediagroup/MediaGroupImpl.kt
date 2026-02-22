@@ -125,12 +125,12 @@ internal data class KidsSectionMediaGroup(
 }
 
 internal data class ChipMediaGroup(
-    private val chipCloudChipRenderer: ChipCloudChipRenderer,
+    private val chipItemWrapper: ChipItemWrapper,
     private val options: MediaGroupOptions
 ): BaseMediaGroup(options) {
     override fun getItemWrappersInt(): List<ItemWrapper?>? = null
-    override fun getNextPageKeyInt(): String? = chipCloudChipRenderer.getContinuationToken()
-    override fun getTitleInt(): String? = chipCloudChipRenderer.getTitle()
+    override fun getNextPageKeyInt(): String? = chipItemWrapper.getContinuationToken()
+    override fun getTitleInt(): String? = chipItemWrapper.getTitle()
 }
 
 internal const val SORT_DEFAULT: Int = 0

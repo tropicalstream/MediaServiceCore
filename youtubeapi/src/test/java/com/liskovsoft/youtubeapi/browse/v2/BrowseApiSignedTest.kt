@@ -255,7 +255,7 @@ class BrowseApiSignedTest {
 
         assertNotNull("Guide contains suggest token", guide?.getSuggestToken())
         assertTrue("Guide contains channels", guide?.getFirstSubs()?.isNotEmpty() == true)
-        assertTrue("Guide collapse contains channels", guide?.getCollapsibleSubs()?.size ?: 0 > 20)
+        assertTrue("Guide collapse contains channels", (guide?.getCollapsibleSubs()?.size ?: 0) > 20)
     }
 
     private fun getGuide(): GuideResult? {

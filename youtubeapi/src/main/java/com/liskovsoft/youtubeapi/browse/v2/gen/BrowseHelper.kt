@@ -37,7 +37,7 @@ internal fun BrowseResult.getContinuationToken(): String? = getRootTab()?.getCon
 internal fun BrowseResult.getTabs(): List<TabRenderer?>? = (contents?.twoColumnBrowseResultsRenderer ?: contents?.singleColumnBrowseResultsRenderer)
     ?.tabs?.mapNotNull { it?.tabRenderer ?: it?.expandableTabRenderer }
 internal fun BrowseResult.getSections(): List<RichSectionRenderer?>? = getRootTab()?.getSections()
-internal fun BrowseResult.getChips(): List<ChipCloudChipRenderer?>? = getRootTab()?.getChips()
+internal fun BrowseResult.getChips(): List<ChipItemWrapper?>? = getRootTab()?.getChips()
 /**
  *  Always renders first tab
  *  
@@ -69,10 +69,9 @@ internal fun TabRenderer.getThumbnails(): ThumbnailItem? = thumbnail
 internal fun TabRenderer.hasNewContent(): Boolean = presentationStyle?.style == TAB_STYLE_NEW_CONTENT
 internal fun TabRenderer.getNestedShelves(): List<ShelfListWrapper?>? = getListRenderer()?.getNestedShelves()
 internal fun TabRenderer.getSections(): List<RichSectionRenderer?>? = getGridRenderer()?.getSections()
-internal fun TabRenderer.getChips(): List<ChipCloudChipRenderer?>? = getChipRenderer()?.getChips()
+internal fun TabRenderer.getChips(): List<ChipItemWrapper?>? = getGridRenderer()?.getChips()
 private fun TabRenderer.getListRenderer() = content?.sectionListRenderer
 private fun TabRenderer.getGridRenderer() = content?.richGridRenderer
-private fun TabRenderer.getChipRenderer() = content?.richGridRenderer?.header?.feedFilterChipBarRenderer
 private fun TabRenderer.getTVGridRenderer() = content?.tvSurfaceContentRenderer?.content?.gridRenderer
 internal fun TabRenderer.getTVListRenderer() = content?.tvSurfaceContentRenderer?.content?.sectionListRenderer
 
@@ -104,12 +103,12 @@ private const val SHELVE_ROW_SIZE = 3 // the modern grid layout is actually rows
 internal fun ShelfListWrapper.getTitle(): String? = getFirstShelfRenderer()?.title?.getText()
 internal fun ShelfListWrapper.getItems(): List<ItemWrapper?>? =
     // Remain only untitled rows. Helps to filter Subscriptions from "Most relevant" and "Shorts".
-    //getContents()?.flatMap { it?.takeIf { it.getTitle() == null }?.getItems() ?: emptyList() }
+    getContents()?.flatMap { it?.takeIf { it.getTitle() == null }?.getItems() ?: emptyList() }
     // The new approach: filter Subscriptions from 'Most relevant' by keeping the same size rows
     // NOTE: new subscriptions use combined approach. No titles.
     // grid for the long line of the recommendations, shelf for the content
     // e.g. "contents" : [ { "gridRenderer": {...} }, { "shelfRenderer": {...}, { "shelfRenderer": {...} }
-    getContents()?.flatMap { it?.getItems()?.takeIf { it.size == SHELVE_ROW_SIZE } ?: emptyList() }
+    //getContents()?.flatMap { it?.getItems()?.takeIf { it.size == SHELVE_ROW_SIZE } ?: emptyList() }
 internal fun ShelfListWrapper.getShortItems(): List<ItemWrapper?>? =
     getContents()?.firstNotNullOfOrNull { if (it?.containsShorts() == true) it.getItems() else null }
 internal fun ShelfListWrapper.getContinuationToken() = getContents()?.lastOrNull()?.getContinuationToken() ?: continuations?.getContinuationToken()
@@ -130,6 +129,7 @@ private fun SectionListRenderer.getContents() = contents // Contains shelves wit
 
 ///////
 
+internal fun GridRenderer.getTitle(): String? = showMoreText?.getText() ?: showFewerText?.getText()
 internal fun GridRenderer.getItems(): List<ItemWrapper?>? = items
 internal fun GridRenderer.getContinuationToken() = continuations?.getContinuationToken() ?: items?.lastOrNull()?.getContinuationToken()
 
@@ -139,16 +139,32 @@ internal fun RichGridRenderer.getItems(): List<ItemWrapper?>? = getContents()?.m
 internal fun RichGridRenderer.getContinuationToken(): String? = getContents()?.lastOrNull()?.getContinuationToken()
 internal fun RichGridRenderer.getShortItems(): List<ItemWrapper?>? = getContents()?.flatMap { it?.getItems() ?: emptyList() }
 internal fun RichGridRenderer.getSections(): List<RichSectionRenderer?>? = getContents()?.mapNotNull { it?.richSectionRenderer }
+internal fun RichGridRenderer.getChips() = header?.feedFilterChipBarRenderer?.getChips() ?: header?.chipBarViewModel?.getChips()
 private fun RichGridRenderer.getContents() = contents
 
 ///////
 
-internal fun FeedFilterChipBarRenderer.getChips(): List<ChipCloudChipRenderer?>? = getContents()?.mapNotNull { it?.chipCloudChipRenderer }
-private fun FeedFilterChipBarRenderer.getContents() = contents
+internal fun FeedFilterChipBarRenderer.getChips(): List<ChipItemWrapper?>? = contents
+
+internal fun ChipCloudChipRenderer.getTitle(): String? = text?.getText()
+internal fun ChipCloudChipRenderer.getContinuationToken() = navigationEndpoint?.continuationCommand?.token
 
 /////
 
-internal fun ChipCloudChipRenderer.getTitle(): String? = text?.getText()
+internal fun ChipBarViewModel.getChips(): List<ChipItemWrapper?>? = chips
+
+internal fun ChipViewModel.getTitle() = text
+internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand?.continuationCommand?.token
+
+/////
+
+/**
+ * In some cases chip item contains multiple shelfs<br/>
+ * Other regular shelfs in this case is empty
+ */
+internal fun ChipItemWrapper.getShelfItems() = chipCloudChipRenderer?.content?.sectionListRenderer?.contents?.map { it?.shelfRenderer }
+internal fun ChipItemWrapper.getTitle() = chipCloudChipRenderer?.getTitle() ?: chipViewModel?.getTitle()
+internal fun ChipItemWrapper.getContinuationToken() = chipCloudChipRenderer?.getContinuationToken() ?: chipViewModel?.getContinuationToken()
 
 /////
 
@@ -162,11 +178,6 @@ internal fun SectionWrapper.getContinuationToken() = continuationItemRenderer?.g
 /////
 
 internal fun ContinuationItemRenderer.getContinuationToken() = continuationEndpoint?.continuationCommand?.token
-
-/////
-
-internal fun ChipCloudChipRenderer.getContinuationToken() = navigationEndpoint?.continuationCommand?.token
-
 
 /////
 
@@ -246,7 +257,8 @@ private fun BrowseResultTV.getSubscriptionsTab() = getTabs()?.firstOrNull { it.g
 
 ///////////
 
-internal fun Shelf.getTitle(): String? = shelfRenderer?.getTitle()
+// Recommended row in subscriptions can have either a shelf of grid. So, we check the titles on both
+internal fun Shelf.getTitle(): String? = shelfRenderer?.getTitle() ?: gridRenderer?.getTitle()
 internal fun Shelf.getItems(): List<ItemWrapper?>? = shelfRenderer?.getItemWrappers()
     ?: gridRenderer?.items
     ?: playlistVideoListRenderer?.contents
@@ -255,6 +267,4 @@ internal fun Shelf.getContinuationToken(): String? = shelfRenderer?.getContinuat
     ?: (gridRenderer ?: shelfRenderer?.content?.gridRenderer)?.getContinuationToken()
     ?: playlistVideoListRenderer?.getContinuationToken()
 internal fun Shelf.containsShorts(): Boolean = shelfRenderer?.containsShorts() == true
-
-///////////
 

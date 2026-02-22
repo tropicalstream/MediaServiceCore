@@ -70,8 +70,8 @@ class BrowseService2Test {
     }
 
     @Test
-    fun testThatChannelSortingNotEmpty() {
-        val sorting = mBrowseService2.getChannelSorting(TestHelpers.CHANNEL_ID_3)
+    fun testThatChannelSortingOptionsNotEmpty() {
+        val sorting = mBrowseService2.getChannelSortingOptions(TestHelpers.CHANNEL_ID_3)
 
         assertTrue("Has sorting entries", (sorting?.size ?: 0) == 3)
         assertTrue("Has continuations", sorting?.mapNotNull { it?.nextPageKey }?.size == 3)

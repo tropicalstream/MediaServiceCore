@@ -1,5 +1,6 @@
 package com.liskovsoft.youtubeapi.next.v2.gen
 
+import com.liskovsoft.youtubeapi.browse.v2.gen.ChipItemWrapper
 import com.liskovsoft.youtubeapi.browse.v2.gen.GridRenderer
 import com.liskovsoft.youtubeapi.browse.v2.gen.SectionWrapper
 import com.liskovsoft.youtubeapi.browse.v2.gen.Shelf
@@ -57,35 +58,8 @@ internal data class ShelfRenderer(
         }
 
         data class ChipCloudRenderer(
-                val chips: List<ChipItem?>?
+             val chips: List<ChipItemWrapper?>?
         )
-    }
-}
-
-internal data class ChipItem(
-        val chipCloudChipRenderer: ChipCloudChipRenderer?
-) {
-    data class ChipCloudChipRenderer(
-            val text: TextItem?,
-            val content: Content?
-    ) {
-        data class Content(
-            val horizontalListRenderer: HorizontalListRenderer?,
-            val sectionListRenderer: SectionListRenderer?
-        ) {
-            data class HorizontalListRenderer(
-                    val items: List<ItemWrapper?>?,
-                    val continuations: List<ContinuationItem?>?
-            )
-
-            data class SectionListRenderer(
-                    val contents: List<Shelf?>?
-            ) {
-                data class Shelf(
-                        val shelfRenderer: ShelfRenderer?
-                )
-            }
-        }
     }
 }
 

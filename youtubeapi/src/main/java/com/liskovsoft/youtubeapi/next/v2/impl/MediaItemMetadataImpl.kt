@@ -12,6 +12,7 @@ import com.liskovsoft.youtubeapi.common.models.impl.mediaitem.NextMediaItem
 import com.liskovsoft.googlecommon.common.helpers.YouTubeHelper
 import com.liskovsoft.youtubeapi.common.models.impl.mediaitem.ShuffleMediaItem
 import com.liskovsoft.youtubeapi.next.v2.gen.*
+import com.liskovsoft.youtubeapi.browse.v2.gen.getShelfItems
 import com.liskovsoft.youtubeapi.notifications.NotificationStateImplWrapper
 
 internal data class MediaItemMetadataImpl(private val watchNextResult: WatchNextResult,

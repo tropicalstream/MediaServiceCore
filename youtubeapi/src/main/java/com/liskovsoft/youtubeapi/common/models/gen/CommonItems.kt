@@ -1,5 +1,6 @@
 package com.liskovsoft.youtubeapi.common.models.gen
 
+import com.liskovsoft.youtubeapi.browse.v2.gen.ContinuationCommand
 import com.liskovsoft.youtubeapi.browse.v2.gen.ContinuationItemRenderer
 import com.liskovsoft.youtubeapi.browse.v2.gen.ReelWatchEndpoint
 import com.liskovsoft.youtubeapi.next.v2.gen.ContinuationItem
@@ -410,7 +411,8 @@ internal data class InnertubeCommand(
     val reelWatchEndpoint: ReelWatchEndpoint?,
     val watchEndpoint: WatchEndpointItem?,
     val showSheetCommand: ShowSheetCommand?,
-    val feedbackEndpoint: FeedbackEndpoint?
+    val feedbackEndpoint: FeedbackEndpoint?,
+    val continuationCommand: ContinuationCommand?
 ) {
     data class ShowSheetCommand(
         val panelLoadingStrategy: PanelLoadingStrategy?
