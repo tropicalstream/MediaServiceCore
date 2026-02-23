@@ -71,9 +71,10 @@ public class TrackingService {
             positionSec = lengthSec;
         }
 
-        if (needNewRecord(videoId)) {
-            createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-        }
+        //if (needNewRecord(videoId)) {
+        //    createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
+        //}
+        createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
         updateWatchTimeLong(videoId, lengthSec, oldPositionSec, positionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
     }
 
