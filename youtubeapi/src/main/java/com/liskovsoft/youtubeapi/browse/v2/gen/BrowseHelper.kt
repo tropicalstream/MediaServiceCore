@@ -99,7 +99,7 @@ private fun RichSectionRenderer.getContents() = content?.richShelfRenderer?.cont
 
 /////
 
-private const val SHELVE_ROW_SIZE = 3 // the modern grid layout is actually rows with the same size
+private const val TV_SHELVE_ROW_SIZE = 3 // the modern grid layout is actually rows with the same size
 
 internal fun ShelfListWrapper.getTitle(): String? = getFirstShelfRenderer()?.title?.getText()
 internal fun ShelfListWrapper.getItems(): List<ItemWrapper?>? =
@@ -111,9 +111,13 @@ internal fun ShelfListWrapper.getItems(): List<ItemWrapper?>? =
     // e.g. "contents" : [ { "gridRenderer": {...} }, { "shelfRenderer": {...}, { "shelfRenderer": {...} }
     //getContents()?.flatMap { it?.getItems()?.takeIf { it.size == SHELVE_ROW_SIZE } ?: emptyList() }
     // Another approach: filter by the last untitled row size
+    //getContents()?.let {
+    //    val size = it.lastOrNull { it != null && it.getTitle() == null }?.getItems()?.size
+    //    it.flatMap { it?.getItems()?.takeIf { size == null || it.size == size } ?: emptyList() }
+    //}
     getContents()?.let {
-        val size = it.lastOrNull { it != null && it.getTitle() == null }?.getItems()?.size
-        it.flatMap { it?.getItems()?.takeIf { size == null || it.size == size } ?: emptyList() }
+        val hasParts = it.any { it?.getItems()?.size == TV_SHELVE_ROW_SIZE }
+        it.flatMap { it?.getItems()?.takeIf { !hasParts || it.size == TV_SHELVE_ROW_SIZE } ?: emptyList() }
     }
 internal fun ShelfListWrapper.getShortItems(): List<ItemWrapper?>? =
     getContents()?.firstNotNullOfOrNull { if (it?.containsShorts() == true) it.getItems() else null }
@@ -127,13 +131,7 @@ private fun ShelfListWrapper.getFirstGridRenderer() = contents?.firstNotNullOfOr
 /////
 
 internal fun SectionListRenderer.getItems(): List<ItemWrapper?>? =
-    // Remain only untitled rows. Helps to filter Subscriptions from "Most relevant" and "Shorts".
-    //getContents()?.flatMap { it?.takeIf { it.getTitle() == null }?.getItems() ?: emptyList() }
-    // Another approach: filter by the last untitled row size
-    getContents()?.let {
-        val size = it.lastOrNull { it != null && it.getTitle() == null }?.getItems()?.size
-        it.flatMap { it?.getItems()?.takeIf { size == null || it.size == size } ?: emptyList() }
-    }
+    getContents()?.flatMap { it?.getItems() ?: emptyList() }
 internal fun SectionListRenderer.getNestedShelves(): List<ShelfListWrapper?>? = getContents()?.mapNotNull { it?.itemSectionRenderer }
 internal fun SectionListRenderer.getContinuationToken(): String? = getContents()?.firstNotNullOfOrNull { it?.getContinuationToken() }
 private fun SectionListRenderer.getContents() = contents // Contains shelves with items (3 in a row) and single row for shorts
