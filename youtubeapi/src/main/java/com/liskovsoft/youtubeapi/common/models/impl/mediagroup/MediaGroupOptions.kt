@@ -32,7 +32,10 @@ internal class MediaGroupOptions private constructor(val removeShorts: Boolean =
                     (channelId == BrowseApiHelper.WATCH_LATER_CHANNEL_ID && data.isContentHidden(MediaServiceData.CONTENT_WATCHED_WATCH_LATER))
             val isGridSection = MediaGroup.TYPE_SUBSCRIPTIONS == groupType || MediaGroup.TYPE_HISTORY == groupType || MediaGroup.TYPE_CHANNEL_UPLOADS == groupType
             val isBrowseSection = groupType != MediaGroup.TYPE_SUGGESTIONS // legacy suggestions ui doesn't have chapters
-            val enableLegacyUI = (data.isLegacyUIEnabled && isBrowseSection) || (!removeShorts && isGridSection) // the modern grid ui contains shorts on a separate row
+            val enableLegacyUI = (data.isLegacyUIEnabled && isBrowseSection)
+                    // NOTE: The modern grid ui contains shorts on a separate row
+                    // NOTE: The legacy ui subscriptions is out of order and cannot be fixed
+                    || (!removeShorts && isGridSection && MediaGroup.TYPE_SUBSCRIPTIONS != groupType)
 
             return MediaGroupOptions(
                 removeShorts,
