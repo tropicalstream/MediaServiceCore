@@ -10,6 +10,8 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
+private const val VIDEO_ID = "K04WmBtVsOs"
+
 class PoTokenProviderImplTest {
     @Before
     fun setUp() {
@@ -54,14 +56,14 @@ class PoTokenProviderImplTest {
     }
 
     private fun assertWebPoTokenLength(length: Int) {
-        val webClientPoToken = PoTokenProviderImpl.getWebClientPoToken("K04WmBtVsOs")
+        val webClientPoToken = PoTokenProviderImpl.getWebClientPoToken(VIDEO_ID)
 
         Assert.assertNotNull("PoToken not empty", webClientPoToken)
         Assert.assertEquals("PoToken length is $length", length, webClientPoToken?.playerRequestPoToken?.length)
     }
 
     private fun assertWebPoTokenIsNotEmpty() {
-        val webClientPoToken = PoTokenProviderImpl.getWebClientPoToken("K04WmBtVsOs")
+        val webClientPoToken = PoTokenProviderImpl.getWebClientPoToken(VIDEO_ID)
 
         Assert.assertNotNull("PoToken not empty", webClientPoToken)
     }

@@ -8,7 +8,6 @@ import com.liskovsoft.youtubeapi.app.models.cached.AppInfoCached;
 import com.liskovsoft.youtubeapi.app.models.cached.ClientDataCached;
 import com.liskovsoft.youtubeapi.app.playerdata.PlayerDataExtractor;
 import com.liskovsoft.youtubeapi.common.helpers.AppConstants;
-import com.liskovsoft.youtubeapi.service.YouTubeMediaItemService;
 
 public class AppServiceIntCached extends AppServiceInt {
     private static final String TAG = AppServiceIntCached.class.getSimpleName();
@@ -17,10 +16,18 @@ public class AppServiceIntCached extends AppServiceInt {
     private ClientDataCached mClientData;
     private PlayerDataExtractor mPlayerDataExtractor;
     private long mAppInfoUpdateTimeMs;
+    private final Object mAppInfoSync = new Object();
     private final Object mPlayerSync = new Object();
+    private final Object mClientDataSync = new Object();
 
     @Override
-    protected synchronized AppInfo getAppInfo(String userAgent) {
+    protected AppInfo getAppInfo(String userAgent) {
+        synchronized (mAppInfoSync) {
+            return getAppInfoSync(userAgent);
+        }
+    }
+
+    private AppInfo getAppInfoSync(String userAgent) {
         if (mAppInfo != null && System.currentTimeMillis() - mAppInfoUpdateTimeMs < CACHE_REFRESH_PERIOD_MS) {
             return mAppInfo;
         }
@@ -38,24 +45,32 @@ public class AppServiceIntCached extends AppServiceInt {
     @Override
     public PlayerDataExtractor getPlayerDataExtractor(String playerUrl) {
         synchronized (mPlayerSync) {
-            if (mPlayerDataExtractor != null && Helpers.equalsAny(playerUrl, mPlayerDataExtractor.getPlayerUrl(), getFailedPlayerUrl())) {
-                return mPlayerDataExtractor;
-            }
-
-            YouTubeMediaItemService.instance().invalidateCache();
-
-            firstValidExtractor(
-                    playerUrl,
-                    check(getData().getAppInfo()) ? getData().getAppInfo().getPlayerUrl() : null,
-                    AppConstants.playerUrls.get(0)
-            );
-
-            return mPlayerDataExtractor;
+            return getPlayerDataExtractorSync(playerUrl);
         }
     }
 
+    private PlayerDataExtractor getPlayerDataExtractorSync(String playerUrl) {
+        if (mPlayerDataExtractor != null && Helpers.equalsAny(playerUrl, mPlayerDataExtractor.getPlayerUrl(), getFailedPlayerUrl())) {
+            return mPlayerDataExtractor;
+        }
+
+        firstValidExtractor(
+                playerUrl,
+                check(getData().getAppInfo()) ? getData().getAppInfo().getPlayerUrl() : null,
+                AppConstants.playerUrls.get(0)
+        );
+
+        return mPlayerDataExtractor;
+    }
+
     @Override
-    protected synchronized ClientData getClientData(String clientUrl) {
+    protected ClientData getClientData(String clientUrl) {
+        synchronized (mClientDataSync) {
+            return getClientDataSync(clientUrl);
+        }
+    }
+
+    private ClientData getClientDataSync(String clientUrl) {
         if (mClientData != null && Helpers.equals(clientUrl, mClientData.getClientUrl())) {
             return mClientData;
         }

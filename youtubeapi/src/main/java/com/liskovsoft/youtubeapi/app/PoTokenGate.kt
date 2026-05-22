@@ -1,5 +1,6 @@
 package com.liskovsoft.youtubeapi.app
 
+import com.liskovsoft.youtubeapi.app.potoken.PoTokenService
 import com.liskovsoft.youtubeapi.app.potokencloud.PoTokenCloudService
 import com.liskovsoft.youtubeapi.app.potokennp2.PoTokenProviderImpl
 import com.liskovsoft.youtubeapi.app.potokennp2.core.PoTokenResult
@@ -61,6 +62,10 @@ internal object PoTokenGate {
             else -> null
         }
     }
+
+    @JvmStatic
+    fun getColdStartPoToken(client: AppClient, videoId: String): String? =
+        if (client.isWebPotRequired) PoTokenService.generateColdStartToken(videoId) else null
 
     @JvmStatic
     fun getVisitorData(client: AppClient): String? {

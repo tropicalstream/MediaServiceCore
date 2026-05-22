@@ -4,9 +4,12 @@ import com.liskovsoft.sharedutils.TestHelpers
 import com.liskovsoft.googlecommon.common.helpers.RetrofitHelper
 import com.liskovsoft.googlecommon.common.js.V8Runtime
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+
+private const val VIDEO_ID = "K04WmBtVsOs"
 
 class PoTokenApiTest {
     private val requestKey = "O43z0dpjhgX20SCx4KAo"
@@ -49,6 +52,13 @@ class PoTokenApiTest {
         )
 
         assertNotNull("PoToken not null", poTokenResult?.poToken)
+    }
+
+    @Test
+    fun testColdStartToken() {
+        val token = PoTokenService.generateColdStartToken(VIDEO_ID)
+
+        assertTrue("Toking is short", token.length < 100)
     }
 
     private fun getChallenge(): Challenge.Result? {
