@@ -7,12 +7,10 @@ public class TranslatedCaptionTrack extends CaptionTrack {
     public final static String TRANSLATE_MARKER = "*";
     private final CaptionTrack mOriginTrack;
     private final TranslationLanguage mLanguage;
-    private final String mTag;
 
-    public TranslatedCaptionTrack(CaptionTrack originTrack, TranslationLanguage language, String tag) {
+    public TranslatedCaptionTrack(CaptionTrack originTrack, TranslationLanguage language) {
         mOriginTrack = originTrack;
         mLanguage = language;
-        mTag = tag;
     }
 
     @Override
