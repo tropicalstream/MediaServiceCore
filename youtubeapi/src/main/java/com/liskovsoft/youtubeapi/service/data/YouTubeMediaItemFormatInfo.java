@@ -123,7 +123,7 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
         formatInfo.mOfParam = videoInfo.getOfParam();
         // END Tracking params
         formatInfo.mStoryboardSpec = videoInfo.getStoryboardSpec();
-        formatInfo.mIsUnplayable = videoInfo.isUnplayable();
+        formatInfo.mIsUnplayable = videoInfo.isUnplayable() && !formatInfo.containsUrlFormats();
         formatInfo.mIsAuth = videoInfo.isAuth();
         formatInfo.mIsUnknownError = videoInfo.isUnknownRestricted();
         formatInfo.mPlayabilityStatus = videoInfo.getPlayabilityStatus();

@@ -251,7 +251,7 @@ public class VideoInfo {
     }
 
     public boolean containsAdaptiveVideoInfo() {
-        if (getAdaptiveFormats() == null) {
+        if (getAdaptiveFormats() == null || isAdaptiveFormatsBroken()) {
             return false;
         }
 

@@ -33,7 +33,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
             AppClient.TV, // Supports auth. Fixes "please sign in" bug!
             AppClient.WEB, // Fix video clip blocked in current location
             AppClient.WEB_SAFARI,
-            //AppClient.IOS,
+            AppClient.IOS,
             AppClient.GEO, // Fix video clip blocked in current location
             AppClient.MWEB, // single audio language
             AppClient.TV_LEGACY,
