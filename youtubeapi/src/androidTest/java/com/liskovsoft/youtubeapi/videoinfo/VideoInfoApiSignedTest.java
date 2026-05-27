@@ -1,7 +1,5 @@
 package com.liskovsoft.youtubeapi.videoinfo;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.liskovsoft.googlecommon.common.helpers.RetrofitOkHttpHelper;
@@ -10,6 +8,7 @@ import com.liskovsoft.youtubeapi.common.helpers.AppClient;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfo;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -29,24 +28,25 @@ public class VideoInfoApiSignedTest extends BaseVideoInfoApiTest {
 
     @Test
     public void testThatAgeRestrictedVideoContainsRequiredFields() {
-        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(AppClient.TV, TestHelpers.VIDEO_ID_AGE_RESTRICTED));
+        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_AGE_RESTRICTED));
     }
 
     @Test
     public void testThatUnavailableVideoContainsRequiredFields() {
-        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(AppClient.TV, TestHelpers.VIDEO_ID_UNAVAILABLE));
+        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_UNAVAILABLE));
     }
 
     @Test
     public void testThatLiveVideoContainsSpecificFields()  {
-        testThatLiveVideoContainsSpecificFields(getVideoInfo(AppClient.TV, TestHelpers.VIDEO_ID_LIVE));
+        testThatLiveVideoContainsSpecificFields(getVideoInfo(TestHelpers.VIDEO_ID_LIVE));
     }
 
     @Test
     public void testThatVideoWithCaptionsContainsRequiredFields() {
-        testThatVideoWithCaptionsContainsRequiredFields(getVideoInfo(AppClient.TV, TestHelpers.VIDEO_ID_CAPTIONS));
+        testThatVideoWithCaptionsContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_CAPTIONS));
     }
 
+    @Ignore("Protected by CAPTCHA")
     @Test
     public void initialResponseTest() {
         testThatVideoInfoContainsRequiredFields(InitialResponse.getVideoInfo(TestHelpers.VIDEO_ID_MUSIC_2, true));

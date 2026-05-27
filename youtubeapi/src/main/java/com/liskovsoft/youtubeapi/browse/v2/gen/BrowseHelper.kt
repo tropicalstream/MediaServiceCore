@@ -301,6 +301,7 @@ private fun BrowseResultTV.getSubscriptionsTab() = getTabs()?.firstOrNull { it.g
 // Recommended row in subscriptions can have either a shelf of grid. So, we check the titles on both
 internal fun Shelf.getTitle(): String? = shelfRenderer?.getTitle() ?: gridRenderer?.getTitle()
 internal fun Shelf.getItems(): List<ItemWrapper?>? = shelfRenderer?.getItemWrappers()
+    ?: channelFeaturedContentRenderer?.items
     ?: gridRenderer?.items
     ?: playlistVideoListRenderer?.contents
     ?: videoRenderer?.let { listOf(ItemWrapper(videoRenderer = it)) }

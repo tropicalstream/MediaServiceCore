@@ -54,6 +54,7 @@ public class DashInfoApiTest extends BaseVideoInfoApiTest {
     //    assertTrue("Has segment duration", dashInfo.getSegmentDurationUs() > 0);
     //}
 
+    @Ignore("Don't work anymore. Dash superseded by Sabr")
     @Test
     public void testDashInfoUrlNotEmpty() throws IOException {
         VideoInfo videoInfo = getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_LIVE);
@@ -69,7 +70,7 @@ public class DashInfoApiTest extends BaseVideoInfoApiTest {
     @Ignore("Don't work anymore. Why?")
     @Test
     public void testDashInfoContentNotEmpty() throws IOException {
-        VideoInfo videoInfo = getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_LIVE);
+        VideoInfo videoInfo = getVideoInfo(TestHelpers.VIDEO_ID_LIVE);
         Call<DashInfoContent> dashInfoWrapper = mDashService.getDashInfoContent(getSmallestAudio(videoInfo).getUrl());
 
         DashInfoContent dashInfo = dashInfoWrapper.execute().body();
@@ -77,10 +78,10 @@ public class DashInfoApiTest extends BaseVideoInfoApiTest {
         assertTrue("start segment not null", dashInfo.getStartSegmentNum() > 0);
         assertTrue("start segment time not null", dashInfo.getStartTimeMs() > 0);
     }
-
+    
     @Test
     public void testDashInfoHeadersNotEmpty() throws IOException {
-        VideoInfo videoInfo = getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_LIVE);
+        VideoInfo videoInfo = getVideoInfo(TestHelpers.VIDEO_ID_LIVE);
         Call<Void> headersWrapper = mFileService.getHeaders(getSmallestAudio(videoInfo).getUrl());
 
         Headers headers = headersWrapper.execute().headers();

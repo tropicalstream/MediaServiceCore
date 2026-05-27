@@ -7,6 +7,7 @@ import com.liskovsoft.youtubeapi.browse.v2.gen.getContinuationToken
 import com.liskovsoft.youtubeapi.browse.v2.gen.getThumbnails
 import com.liskovsoft.youtubeapi.browse.v2.gen.getVideoId
 import com.liskovsoft.googlecommon.common.helpers.ServiceHelper
+import com.liskovsoft.sharedutils.helpers.Helpers
 import com.liskovsoft.youtubeapi.next.v2.gen.getContinuationToken
 
 // A badge before the image
@@ -245,6 +246,8 @@ internal fun ShortsItem.getThumbnails() = onTap?.innertubeCommand?.reelWatchEndp
 
 ////////////
 
+internal const val LOCKUP_BADGE_STYLE_LIVE = "THUMBNAIL_OVERLAY_BADGE_STYLE_LIVE"
+
 internal fun LockupItem.getTitle() = metadata?.lockupMetadataViewModel?.title?.getText()
 internal fun LockupItem.getSubTitle() = YouTubeHelper.createInfo(
     *metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows?.mapNotNull {
@@ -254,7 +257,7 @@ internal fun LockupItem.getVideoId() = getWatchEndpoint()?.videoId
 internal fun LockupItem.getPlaylistId() = getWatchEndpoint()?.playlistId
 internal fun LockupItem.getThumbnails() = getThumbnailView()?.image
 internal fun LockupItem.getBadgeText() = getBadge()?.text
-internal fun LockupItem.isLive() = BADGE_STYLE_LIVE == getBadge()?.badgeStyle
+internal fun LockupItem.isLive() = Helpers.equalsAny(getBadge()?.badgeStyle, BADGE_STYLE_LIVE, LOCKUP_BADGE_STYLE_LIVE)
 internal fun LockupItem.getPercentWatched() = getOverlays()?.firstNotNullOfOrNull {
     it?.thumbnailBottomOverlayViewModel?.progressBar?.thumbnailOverlayProgressBarViewModel?.startPercent }
 // The video without a badge, probably Watch again

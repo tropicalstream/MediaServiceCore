@@ -218,6 +218,7 @@ internal data class ReelPlayerHeaderRenderer(
 // Corresponds to the row
 internal data class Shelf(
     val shelfRenderer: ShelfRenderer?,
+    val channelFeaturedContentRenderer: ChannelFeaturedContentRenderer?,
     val playlistVideoListRenderer: PlaylistVideoListRenderer?,
     val gridRenderer: GridRenderer?,
     val videoRenderer: VideoItem?,
@@ -253,3 +254,7 @@ internal data class Content(
         )
     }
 }
+
+internal data class ChannelFeaturedContentRenderer(
+    val items: List<ItemWrapper?>?
+)

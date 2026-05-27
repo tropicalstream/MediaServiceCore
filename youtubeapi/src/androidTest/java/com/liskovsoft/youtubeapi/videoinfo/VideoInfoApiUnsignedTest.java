@@ -24,22 +24,22 @@ public class VideoInfoApiUnsignedTest extends BaseVideoInfoApiTest {
     @Ignore("Require sign-in")
     @Test
     public void testThatAgeRestrictedVideoContainsRequiredFields() {
-        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_AGE_RESTRICTED));
+        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_AGE_RESTRICTED));
     }
 
     @Test
     public void testThatUnavailableVideoContainsRequiredFields() {
-        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_UNAVAILABLE));
+        testThatNonLiveVideoInfoContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_UNAVAILABLE));
     }
 
     @Test
     public void testThatLiveVideoContainsSpecificFields() {
-        testThatLiveVideoContainsSpecificFields(getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_LIVE));
+        testThatLiveVideoContainsSpecificFields(getVideoInfo(TestHelpers.VIDEO_ID_LIVE));
     }
 
     @Test
     public void testThatVideoWithCaptionsContainsRequiredFields() {
-        testThatVideoWithCaptionsContainsRequiredFields(getVideoInfo(AppClient.WEB, TestHelpers.VIDEO_ID_CAPTIONS));
+        testThatVideoWithCaptionsContainsRequiredFields(getVideoInfo(TestHelpers.VIDEO_ID_CAPTIONS));
     }
 
     @Test

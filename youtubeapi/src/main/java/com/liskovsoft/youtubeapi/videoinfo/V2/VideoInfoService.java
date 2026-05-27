@@ -18,7 +18,6 @@ import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfo;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfoHls;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfoReel;
 
-import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -29,6 +28,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
     private final VideoInfoApi mVideoInfoApi;
     private final static AppClient[] VIDEO_INFO_TYPE_LIST = {
             AppClient.WEB_EMBED, // Restricted (18+) videos
+            AppClient.ANDROID_VR, // doesn't require pot and cipher (often hangs?)
             AppClient.ANDROID_REEL, // doesn't require pot and cipher
             AppClient.TV, // Supports auth. Fixes "please sign in" bug!
             AppClient.WEB, // Fix video clip blocked in current location
@@ -39,7 +39,6 @@ public class VideoInfoService extends VideoInfoServiceBase {
             AppClient.TV_LEGACY,
             AppClient.TV_DOWNGRADED,
             AppClient.TV_EMBED, // single audio language
-            AppClient.ANDROID_VR, // doesn't require pot and cipher (often hangs?)
             AppClient.TV_SIMPLY, // hangs?
             //AppClient.ANDROID_SDK_LESS, // doesn't require pot (hangs on cronet!)
     };
@@ -202,11 +201,13 @@ public class VideoInfoService extends VideoInfoServiceBase {
         boolean auth = client.isAuthSupported() && mAuthBlock;
 
         if (client.isReelClient()) {
-            Call<VideoInfoReel> wrapper = mVideoInfoApi.getVideoInfoReel(videoInfoQuery, mAppService.getVisitorData(), client.getUserAgent());
+            Call<VideoInfoReel> wrapper = mVideoInfoApi.getVideoInfoReel(videoInfoQuery, mAppService.getVisitorData(),
+                    client.getUserAgent(), client.getInnerTubeName(), client.getClientVersion());
             return getVideoInfoReel(wrapper, auth);
         }
 
-        Call<VideoInfo> wrapper = mVideoInfoApi.getVideoInfo(videoInfoQuery, mAppService.getVisitorData(), client.getUserAgent());
+        Call<VideoInfo> wrapper = mVideoInfoApi.getVideoInfo(videoInfoQuery, mAppService.getVisitorData(),
+                client.getUserAgent(), client.getInnerTubeName(), client.getClientVersion());
         return getVideoInfo(wrapper, auth);
     }
 
@@ -240,7 +241,8 @@ public class VideoInfoService extends VideoInfoServiceBase {
     }
 
     private VideoInfoHls getVideoInfoHls(AppClient client, String videoInfoQuery) {
-        Call<VideoInfoHls> wrapper = mVideoInfoApi.getVideoInfoHls(videoInfoQuery, mAppService.getVisitorData());
+        Call<VideoInfoHls> wrapper = mVideoInfoApi.getVideoInfoHls(videoInfoQuery, mAppService.getVisitorData(),
+                client.getUserAgent(), client.getInnerTubeName(), client.getClientVersion());
 
         return RetrofitHelper.get(wrapper, client.isAuthSupported() && mAuthBlock);
     }
