@@ -45,14 +45,15 @@ internal object PlaylistGroupServiceImpl : MediaServicePrefs.ProfileChangeListen
     }
 
     @JvmStatic
-    fun removePlaylistGroup(id: String?) {
+    fun removePlaylistGroup(id: String?): Boolean {
         if (id == null)
-            return
+            return false
 
         val result = Helpers.removeIf(mPlaylists) { it.id == id }
         if (!result.isNullOrEmpty()) {
             persistData()
         }
+        return !result.isNullOrEmpty()
     }
 
     @JvmStatic

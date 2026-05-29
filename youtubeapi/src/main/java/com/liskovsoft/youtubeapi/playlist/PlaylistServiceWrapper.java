@@ -194,12 +194,11 @@ public class PlaylistServiceWrapper extends PlaylistService {
         try {
             super.removePlaylist(playlistId);
         } catch (IllegalStateException e) {
-            if (Helpers.equals(e.getMessage(), "ErrorResponse: The caller does not have permission")) {
+            boolean success = PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
+            if (!success) {
                 throw e;
             }
         }
-
-        PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
     }
 
     @Override
