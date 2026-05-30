@@ -3,6 +3,7 @@ package com.liskovsoft.youtubeapi.app.potoken
 import com.liskovsoft.sharedutils.TestHelpers
 import com.liskovsoft.googlecommon.common.helpers.RetrofitHelper
 import com.liskovsoft.googlecommon.common.js.V8Runtime
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -58,7 +59,7 @@ class PoTokenApiTest {
     fun testColdStartToken() {
         val token = PoTokenService.generateColdStartToken(VIDEO_ID)
 
-        assertTrue("Toking is short", token.length < 100)
+        assertEquals("Toking is short", 28, token.length)
     }
 
     private fun getChallenge(): Challenge.Result? {
