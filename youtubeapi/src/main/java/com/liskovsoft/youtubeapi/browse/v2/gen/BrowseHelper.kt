@@ -2,6 +2,7 @@ package com.liskovsoft.youtubeapi.browse.v2.gen
 
 import com.liskovsoft.sharedutils.helpers.Helpers
 import com.liskovsoft.googlecommon.common.helpers.YouTubeHelper
+import com.liskovsoft.youtubeapi.common.models.gen.CommandExecutorCommand
 import com.liskovsoft.youtubeapi.common.models.gen.ItemWrapper
 import com.liskovsoft.youtubeapi.common.models.gen.ShowSheetCommand
 import com.liskovsoft.youtubeapi.common.models.gen.ThumbnailItem
@@ -155,8 +156,7 @@ internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand
 /////
 
 internal fun ListItemViewModel.getTitle() = title?.getText()
-internal fun ListItemViewModel.getContinuationToken() =
-    rendererContext?.commandContext?.onTap?.innertubeCommand?.commandExecutorCommand?.commands?.firstNotNullOfOrNull { it?.continuationCommand?.token }
+internal fun ListItemViewModel.getContinuationToken() = rendererContext?.getContinuationToken()
 
 /////
 
@@ -327,4 +327,12 @@ internal fun List<Shelf?>.getItems(): List<ItemWrapper?> {
 //////////
 
 internal fun ShowSheetCommand.getItems() = panelLoadingStrategy?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems
+internal fun ShowSheetCommand.getFeedbackTokens() = panelLoadingStrategy
+    ?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems?.mapNotNull {
+        it?.listItemViewModel?.rendererContext?.commandContext?.onTap?.innertubeCommand?.feedbackEndpoint?.feedbackToken
+    }
 
+//////////
+
+internal fun CommandExecutorCommand.getContinuationToken() = commands?.firstNotNullOfOrNull { it?.continuationCommand?.token }
+internal fun CommandExecutorCommand.getFeedbackToken() = commands?.firstNotNullOfOrNull { it?.feedbackEndpoint?.feedbackToken }

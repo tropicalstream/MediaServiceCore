@@ -8,6 +8,8 @@ import com.liskovsoft.youtubeapi.browse.v2.gen.getThumbnails
 import com.liskovsoft.youtubeapi.browse.v2.gen.getVideoId
 import com.liskovsoft.googlecommon.common.helpers.ServiceHelper
 import com.liskovsoft.sharedutils.helpers.Helpers
+import com.liskovsoft.youtubeapi.browse.v2.gen.getFeedbackToken
+import com.liskovsoft.youtubeapi.browse.v2.gen.getFeedbackTokens
 import com.liskovsoft.youtubeapi.next.v2.gen.getContinuationToken
 
 // A badge before the image
@@ -64,7 +66,7 @@ internal fun NavigationEndpointItem.getPlaylistId() = watchEndpoint?.playlistId 
 internal fun NavigationEndpointItem.getIndex() = watchEndpoint?.index
 internal fun NavigationEndpointItem.getFeedbackToken() =
     getOverlayItems()?.firstNotNullOfOrNull {
-        it?.compactLinkRenderer?.serviceEndpoint?.commandExecutorCommand?.commands?.firstNotNullOfOrNull { it.feedbackEndpoint?.feedbackToken }
+        it?.compactLinkRenderer?.serviceEndpoint?.commandExecutorCommand?.getFeedbackToken()
     }
 private fun NavigationEndpointItem.getOverlayPanel() = openPopupAction?.popup?.overlaySectionRenderer?.overlay
     ?.overlayTwoPanelRenderer?.actionPanel?.overlayPanelRenderer
@@ -253,8 +255,8 @@ internal fun LockupItem.getSubTitle() = YouTubeHelper.createInfo(
     *metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows?.mapNotNull {
         it?.metadataParts?.mapNotNull { it?.text?.getText() } }?.flatten()?.toTypedArray() ?: emptyArray<String>()
 )
-internal fun LockupItem.getVideoId() = getWatchEndpoint()?.videoId
-internal fun LockupItem.getPlaylistId() = getWatchEndpoint()?.playlistId
+internal fun LockupItem.getVideoId() = rendererContext?.getVideoId()
+internal fun LockupItem.getPlaylistId() = rendererContext?.getPlaylistId()
 internal fun LockupItem.getThumbnails() = getThumbnailView()?.image
 internal fun LockupItem.getBadgeText() = getBadge()?.text
 internal fun LockupItem.isLive() = Helpers.equalsAny(getBadge()?.badgeStyle, BADGE_STYLE_LIVE, LOCKUP_BADGE_STYLE_LIVE)
@@ -263,15 +265,12 @@ internal fun LockupItem.getPercentWatched() = getOverlays()?.firstNotNullOfOrNul
 // The video without a badge, probably Watch again
 internal fun LockupItem.isEmpty() = getPercentWatched() == 100 && getBadgeText() == null
 internal fun LockupItem.getFeedbackTokens() =
-    metadata?.lockupMetadataViewModel?.menuButton?.buttonViewModel?.onTap?.innertubeCommand?.showSheetCommand?.panelLoadingStrategy
-        ?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems?.mapNotNull {
-            it?.listItemViewModel?.rendererContext?.commandContext?.onTap?.innertubeCommand?.feedbackEndpoint?.feedbackToken
-        }
+    metadata?.lockupMetadataViewModel?.menuButton?.buttonViewModel?.onTap?.innertubeCommand?.showSheetCommand?.getFeedbackTokens()
+internal fun LockupItem.getChannelId() = contentId ?: rendererContext?.getBrowseId()
 private fun LockupItem.getBadge() = getOverlays()?.firstNotNullOfOrNull { it?.thumbnailOverlayBadgeViewModel?.thumbnailBadges
     ?: it?.thumbnailBottomOverlayViewModel?.badges }?.firstNotNullOfOrNull { it?.thumbnailBadgeViewModel }
 private fun LockupItem.getOverlays() = getThumbnailView()?.overlays
 private fun LockupItem.getThumbnailView() = contentImage?.thumbnailViewModel ?: contentImage?.collectionThumbnailViewModel?.primaryThumbnail?.thumbnailViewModel
-private fun LockupItem.getWatchEndpoint() = rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint
 
 ////////////
 
@@ -330,7 +329,7 @@ internal fun ItemWrapper.getUpcomingEventText() = getVideoItem()?.getUpcomingEve
 internal fun ItemWrapper.getPlaylistId() = getVideoItem()?.getPlaylistId() ?: getMusicItem()?.getPlaylistId() ?: getTileItem()?.getPlaylistId() ?: getLockupItem()?.getPlaylistId()
     ?: getPlaylistItem()?.getPlaylistId() ?: getRadioItem()?.getPlaylistId()
 internal fun ItemWrapper.getChannelId() = getVideoItem()?.getChannelId() ?: getMusicItem()?.getChannelId() ?: getTileItem()?.getChannelId()
-    ?: getChannelItem()?.getChannelId() ?: getRadioItem()?.getChannelId()
+    ?: getChannelItem()?.getChannelId() ?: getRadioItem()?.getChannelId() ?: getLockupItem()?.getChannelId()
 internal fun ItemWrapper.getChannelParams() = getTileItem()?.getChannelParams()
 internal fun ItemWrapper.getPlaylistIndex() = getVideoItem()?.getPlaylistIndex() ?: getMusicItem()?.getPlaylistIndex() ?: getTileItem()?.getPlaylistIndex()
 internal fun ItemWrapper.isLive() = getVideoItem()?.isLive() ?: getMusicItem()?.isLive() ?: getTileItem()?.isLive() ?: getLockupItem()?.isLive() ?: false
@@ -406,3 +405,11 @@ internal fun ResponseContext.getSuggestToken(): String? = serviceTrackingParams?
         it.params?.firstOrNull { it?.key == KEY_SUGGEST_TOKEN }?.value
     } else null
 }
+
+//////
+
+internal fun RendererContext.getVideoId() = getOnTapCommand()?.watchEndpoint?.videoId
+internal fun RendererContext.getPlaylistId() = getOnTapCommand()?.watchEndpoint?.playlistId
+internal fun RendererContext.getBrowseId() = getOnTapCommand()?.browseEndpoint?.browseId
+internal fun RendererContext.getContinuationToken() = getOnTapCommand()?.commandExecutorCommand?.getContinuationToken()
+private fun RendererContext.getOnTapCommand() = commandContext?.onTap?.innertubeCommand

@@ -19,10 +19,6 @@ internal data class NavigationEndpointItem(
     val showEngagementPanelEndpoint: ShowEngagementPanelEndpoint?,
     val searchEndpoint: SearchEndpoint?
 ) {
-    data class BrowseEndpoint(
-        val browseId: String?,
-        val params: String?
-    )
     data class SearchEndpoint(
         val query: String?
     )
@@ -77,6 +73,11 @@ internal data class NavigationEndpointItem(
         }
     }
 }
+
+internal data class BrowseEndpoint(
+    val browseId: String?,
+    val params: String?
+)
 
 internal data class WatchEndpointItem(
     val videoId: String?,
@@ -270,16 +271,16 @@ internal data class TileItem(
 
     data class OnLongPressCommand(
         val showMenuCommand: ShowMenuCommand?
-    ) {
-        data class ShowMenuCommand(
-            val contentId: String?,
-            val thumbnail: ThumbnailItem?,
-            val title: TextItem?,
-            val subtitle: TextItem?,
-            val menu: MenuWrapper?
-        )
-    }
+    )
 }
+
+internal data class ShowMenuCommand(
+    val contentId: String?,
+    val thumbnail: ThumbnailItem?,
+    val title: TextItem?,
+    val subtitle: TextItem?,
+    val menu: MenuWrapper?
+)
 
 internal data class TileMetadataRenderer(
     val title: TextItem?,
@@ -416,8 +417,10 @@ internal data class InnertubeCommand(
     val watchEndpoint: WatchEndpointItem?,
     val showSheetCommand: ShowSheetCommand?,
     val feedbackEndpoint: FeedbackEndpoint?,
+    val browseEndpoint: BrowseEndpoint?,
     val continuationCommand: ContinuationCommand?,
-    val commandExecutorCommand: CommandExecutorCommand?
+    val commandExecutorCommand: CommandExecutorCommand?,
+    val showMenuCommand: ShowMenuCommand?
 )
 
 internal data class ShowSheetCommand(
@@ -445,17 +448,21 @@ internal data class ShowSheetCommand(
 }
 
 internal data class CommandExecutorCommand(
+    // WARN: don't merge ExecutorCommand with InnertubeCommand: Android 4 StackOverflowError
+    // The node InnertubeCommand recursively reference itself
     val commands: List<Command?>?
 ) {
     data class Command(
-        val continuationCommand: ContinuationCommand?
+        val continuationCommand: ContinuationCommand?,
+        val feedbackEndpoint: FeedbackEndpoint?
     )
 }
 
 internal data class LockupItem(
     val contentImage: ContentImage?, // thumbnail
     val metadata: MetadataItem?, // title, subtitle, channelId
-    val rendererContext: RendererContext? // videoId
+    val rendererContext: RendererContext?, // videoId
+    val contentId: String?
 ) {
     data class ContentImage(
         val thumbnailViewModel: ThumbnailViewModel?,
@@ -540,7 +547,8 @@ internal data class RendererContext(
     val commandContext: CommandContext?
 ) {
     data class CommandContext(
-        val onTap: OnTap?
+        val onTap: OnTap?,
+        val onLongPress: OnTap?
     )
 }
 
@@ -585,16 +593,7 @@ internal data class ServiceEndpoint(
     data class RecordNotificationInteractionsEndpoint(
         val serializedInteractionsRequest: String?
     )
-    data class CommandExecutorCommand(
-        // WARN: don't merge ExecutorCommand with InnertubeCommand: Android 4 StackOverflowError
-        // The node InnertubeCommand recursively reference itself
-        val commands: List<ExecutorCommand>?
-    )
 }
-
-internal data class ExecutorCommand(
-    val feedbackEndpoint: FeedbackEndpoint?
-)
 
 internal data class FeedbackEndpoint(
     val feedbackToken: String?
