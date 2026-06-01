@@ -217,19 +217,23 @@ internal open class BrowseService2 {
         val result = mBrowseApi.getBrowseResultTV(BrowseApiHelper.getMyPlaylistQuery(options.clientTV))
 
         return RetrofitHelper.get(result)?.let {
-            if (it.getItems()?.firstOrNull { it?.getPlaylistId().equals(BrowseApiHelper.WATCH_LATER_PLAYLIST) } != null) {
-                BrowseMediaGroupTV(it, options)
-            } else { // No Watch Later (moved to the dedicated subsection)
-                val library = mBrowseApi.getBrowseResultTV(BrowseApiHelper.getMyLibraryQuery(options.clientTV))
-
-                val outer = it
-
-                RetrofitHelper.get(library)?.let {
-                    val watchLater = it.getItems()?.getOrNull(1) // Watch Later subsection
-                    BrowseMediaGroupTV(outer, options, watchLater?.let { outer.getItems()?.toMutableList()?.apply { add(0, it) } })
-                }
-            }
+            BrowseMediaGroupTV(it, options)
         }
+
+        //return RetrofitHelper.get(result)?.let {
+        //    if (it.getItems()?.firstOrNull { it?.getPlaylistId().equals(BrowseApiHelper.WATCH_LATER_PLAYLIST) } != null) {
+        //        BrowseMediaGroupTV(it, options)
+        //    } else { // No Watch Later (moved to the dedicated subsection)
+        //        val library = mBrowseApi.getBrowseResultTV(BrowseApiHelper.getMyLibraryQuery(options.clientTV))
+        //
+        //        val outer = it
+        //
+        //        RetrofitHelper.get(library)?.let {
+        //            val watchLater = it.getItems()?.getOrNull(1) // Watch Later subsection
+        //            BrowseMediaGroupTV(outer, options, watchLater?.let { outer.getItems()?.toMutableList()?.apply { add(0, it) } })
+        //        }
+        //    }
+        //}
     }
 
     private fun continueShortsWeb(continuationKey: String?, auth: Boolean = false): MediaGroup? {
