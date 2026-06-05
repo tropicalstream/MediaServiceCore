@@ -28,7 +28,7 @@ internal open class SearchService2 {
     open fun getSearch(searchText: String?, options: Int): List<MediaGroup>? {
         val wrapper: Call<SearchResult?> =
             mSearchApi.getSearchResult(SearchApiHelper.getSearchQuery(searchText, options), mAppService.visitorData)
-        val searchResult = RetrofitHelper.get(wrapper)
+        val searchResult = RetrofitHelper.get(wrapper) ?: RetrofitHelper.get(wrapper, false)
 
 
         if (searchResult == null) {

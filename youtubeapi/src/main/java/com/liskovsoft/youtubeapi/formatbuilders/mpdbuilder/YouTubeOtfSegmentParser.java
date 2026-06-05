@@ -60,12 +60,12 @@ public class YouTubeOtfSegmentParser {
         List<OtfSegment> result = null;
 
         if (url != null) {
-            Response response = OkHttpManager.instance().doGetRequest(url);
-
-            if (response != null && response.body() != null) {
-                result = parseInt(response.body().charStream());
-            } else {
-                Log.e(TAG, "Can't parse url " + url + ". Response is " + response);
+            try (Response response = OkHttpManager.instance().doGetRequest(url)) {
+                if (response != null && response.body() != null) {
+                    result = parseInt(response.body().charStream());
+                } else {
+                    Log.e(TAG, "Can't parse url " + url + ". Response is " + response);
+                }
             }
         } else {
             Log.e(TAG, "Can't parse url. Url is empty.");

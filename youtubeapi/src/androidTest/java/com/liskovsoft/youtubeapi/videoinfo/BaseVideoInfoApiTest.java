@@ -13,6 +13,7 @@ import com.liskovsoft.sharedutils.prefs.GlobalPreferences;
 import com.liskovsoft.youtubeapi.app.AppService;
 import com.liskovsoft.youtubeapi.common.helpers.AppClient;
 import com.liskovsoft.youtubeapi.formatbuilders.utils.MediaFormatUtils;
+import com.liskovsoft.youtubeapi.innertube.initialresponse.InitialResponseService;
 import com.liskovsoft.youtubeapi.videoinfo.V2.VideoInfoApi;
 import com.liskovsoft.youtubeapi.videoinfo.V2.VideoInfoApiHelper;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoUrlHolder;
@@ -86,7 +87,7 @@ abstract class BaseVideoInfoApiTest {
 
     protected VideoInfo getVideoInfo(AppClient client, String videoId) {
         if (client == AppClient.INITIAL) {
-            return InitialResponse.getVideoInfo(videoId, client.isAuthSupported());
+            return InitialResponseService.getVideoInfo(videoId, client.isAuthSupported());
         }
 
         if (client == AppClient.ANDROID_REEL) {

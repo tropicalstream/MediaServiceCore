@@ -22,7 +22,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-private const val DEFAULT_VIDEO_ID = "K04WmBtVsOs"
+private const val VIDEO_ID = "K04WmBtVsOs"
 
 class InnertubeServiceTest {
     @Before
@@ -147,9 +147,16 @@ class InnertubeServiceTest {
         Assert.assertNotNull("encryptedHostFlags not null", encryptedHostFlags)
     }
 
+    @Test
+    fun testThatFormatInfoV2() {
+        val formatInfo = InnertubeService.createFormatInfoV2(VIDEO_ID)
+
+        Assert.assertNotNull("formatInfo v2 not empty", formatInfo)
+    }
+
     private fun getPlayerResult(session: Session): PlayerResult? {
         val httpClient = HTTPClient(session)
 
-        return httpClient.fetch("/player", RequestInit(body = RequestInitBody(DEFAULT_VIDEO_ID, session = session)))
+        return httpClient.fetch("/player", RequestInit(body = RequestInitBody(VIDEO_ID, session = session)))
     }
 }

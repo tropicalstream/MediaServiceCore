@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import com.liskovsoft.googlecommon.common.helpers.RetrofitOkHttpHelper;
 import com.liskovsoft.googlecommon.common.helpers.tests.TestHelpers;
 import com.liskovsoft.youtubeapi.common.helpers.AppClient;
+import com.liskovsoft.youtubeapi.innertube.initialresponse.InitialResponseService;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfo;
 
 import org.junit.Before;
@@ -49,7 +50,7 @@ public class VideoInfoApiSignedTest extends BaseVideoInfoApiTest {
     @Ignore("Protected by CAPTCHA")
     @Test
     public void initialResponseTest() {
-        testThatVideoInfoContainsRequiredFields(InitialResponse.getVideoInfo(TestHelpers.VIDEO_ID_MUSIC_2, true));
+        testThatVideoInfoContainsRequiredFields(InitialResponseService.getVideoInfo(TestHelpers.VIDEO_ID_MUSIC_2, true));
     }
 
     @Test

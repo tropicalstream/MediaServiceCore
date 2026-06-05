@@ -10,7 +10,7 @@ import com.liskovsoft.youtubeapi.app.PoTokenGate;
 import com.liskovsoft.youtubeapi.common.helpers.AppClient;
 import com.liskovsoft.googlecommon.common.helpers.RetrofitHelper;
 import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
-import com.liskovsoft.youtubeapi.videoinfo.InitialResponse;
+import com.liskovsoft.youtubeapi.innertube.initialresponse.InitialResponseService;
 import com.liskovsoft.youtubeapi.videoinfo.VideoInfoServiceBase;
 import com.liskovsoft.youtubeapi.videoinfo.models.CaptionTrack;
 import com.liskovsoft.youtubeapi.videoinfo.models.TranslationLanguage;
@@ -184,7 +184,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
         VideoInfo result;
 
         if (client == AppClient.INITIAL) {
-            result = InitialResponse.getVideoInfo(videoId, mAuthBlock);
+            result = InitialResponseService.getVideoInfo(videoId, mAuthBlock);
         } else {
             String videoInfoQuery = VideoInfoApiHelper.getVideoInfoQuery(client, videoId, clickTrackingParams);
             result = getVideoInfo(client, videoInfoQuery);
