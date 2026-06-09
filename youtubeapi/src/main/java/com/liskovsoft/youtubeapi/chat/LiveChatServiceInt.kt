@@ -32,9 +32,10 @@ internal object LiveChatServiceInt {
                 Log.e(TAG, "Oops. Stopping. Got NPE.")
                 e.printStackTrace()
                 break
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, e.message)
                 // Continue to listen whichever is happening.
+                // Android 4.4: StackOverflowError sometimes (is it recoverable?)
             }
         }
     }
