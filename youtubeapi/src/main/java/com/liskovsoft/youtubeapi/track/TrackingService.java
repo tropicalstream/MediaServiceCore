@@ -2,7 +2,6 @@ package com.liskovsoft.youtubeapi.track;
 
 import androidx.annotation.NonNull;
 
-import com.liskovsoft.googlecommon.common.helpers.ServiceHelper;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.youtubeapi.app.AppService;
@@ -15,7 +14,7 @@ import retrofit2.Call;
 public class TrackingService {
     private static final String TAG = TrackingService.class.getSimpleName();
     private static final int START_THRESHOLD_SEC = 3 * 60;
-    private static final long HISTORY_RENEW_MS = 3 * 60_000;
+    private static final long HISTORY_RENEW_MS = 30 * 60_000;
     private static TrackingService sInstance;
     private final TrackingApi mTrackingApi;
     private Triple<String, Float, Long> mPosition;
@@ -60,16 +59,14 @@ public class TrackingService {
         if (isVideoAlmostWatched) {
             //positionSec = lengthSec;
             createWatchRecordShort(videoId, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-            //ServiceHelper.sleep(1_000);
             updateWatchTimeShort(videoId, lengthSec, lengthSec, lengthSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
             return;
         }
 
-        //if (needNewRecord(videoId)) {
-        //    createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-        //}
-        createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-        //ServiceHelper.sleep(1_000);
+        if (needNewRecord(videoId)) {
+            createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
+        }
+        //createWatchRecordLong(videoId, lengthSec, oldPositionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
         updateWatchTimeLong(videoId, lengthSec, oldPositionSec, positionSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
     }
 
@@ -155,7 +152,7 @@ public class TrackingService {
     }
 
     private boolean isRecordOutdated() {
-        return mPosition != null && System.currentTimeMillis() - mPosition.getThird() > HISTORY_RENEW_MS;
+        return mPosition == null || System.currentTimeMillis() - mPosition.getThird() > HISTORY_RENEW_MS;
     }
 
     private float getEndThresholdSec(float lengthSec) {

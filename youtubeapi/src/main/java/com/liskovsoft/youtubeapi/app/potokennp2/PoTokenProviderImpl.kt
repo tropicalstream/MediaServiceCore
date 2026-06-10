@@ -81,9 +81,23 @@ internal object PoTokenProviderImpl : PoTokenProvider {
 
                     latch?.await(3, TimeUnit.SECONDS)
 
+                    //// create a new webPoTokenGenerator
+                    //webPoTokenGenerator = (poTokenFactory ?: PoTokenWebView)
+                    //    .newPoTokenGenerator(AppService.instance().context)
+
                     // create a new webPoTokenGenerator
-                    webPoTokenGenerator = (poTokenFactory ?: PoTokenWebView)
-                        .newPoTokenGenerator(AppService.instance().context)
+                    val context = AppService.instance().context
+                    webPoTokenGenerator = try {
+                        (poTokenFactory ?: PoTokenWebView)
+                            .newPoTokenGenerator(context)
+                    } catch (e: BadWebViewException) {
+                        // BadWebViewException - Error invoking onRunBotguardResult
+                        // PoTokenWebView2/3 may fail due to too many requests. Switching to the default variant.
+                        if (poTokenFactory != null && poTokenFactory != PoTokenWebView)
+                            PoTokenWebView.newPoTokenGenerator(context)
+                        else
+                            throw e
+                    }
 
                     // The streaming poToken needs to be generated exactly once before generating
                     // any other (player) tokens.
