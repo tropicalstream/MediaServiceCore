@@ -194,10 +194,13 @@ public class PlaylistServiceWrapper extends PlaylistService {
         try {
             super.removePlaylist(playlistId);
         } catch (IllegalStateException e) {
-            boolean success = PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
-            if (!success) {
+            List<PlaylistInfo> playlistInfos = super.getPlaylistsInfo(null);
+            if (Helpers.containsIf(playlistInfos,
+                    playlistInfo -> Helpers.equals(playlistInfo.getPlaylistId(), playlistId))) {
                 throw e;
             }
+        } finally {
+            PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
         }
     }
 
