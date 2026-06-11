@@ -60,6 +60,10 @@ public class PlaylistService {
     }
 
     public void removePlaylist(String playlistId) {
+        if (playlistId.length() < 5) {
+            throw new IllegalStateException("Built-in playlists cannot be removed");
+        }
+
         try {
             // Try to remove foreign playlist first
             removeForeignPlaylist(playlistId);
