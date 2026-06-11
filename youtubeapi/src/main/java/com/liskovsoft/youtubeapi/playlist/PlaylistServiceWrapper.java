@@ -4,11 +4,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.liskovsoft.mediaserviceinterfaces.data.ItemGroup;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.youtubeapi.browse.v2.BrowseApiHelper;
+import com.liskovsoft.youtubeapi.browse.v2.BrowseService2Wrapper;
 import com.liskovsoft.youtubeapi.channelgroups.models.ItemGroupImpl;
 import com.liskovsoft.youtubeapi.channelgroups.models.ItemImpl;
 import com.liskovsoft.youtubeapi.next.v2.WatchNextService;
@@ -191,16 +193,14 @@ public class PlaylistServiceWrapper extends PlaylistService {
 
     @Override
     public void removePlaylist(String playlistId) {
-        try {
+        // First remove cached playlists
+        PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
+
+        // NOTE: getPlaylistInfo doesn't contain foreign playlists. Use browse instead.
+        MediaGroup myPlaylists = BrowseService2Wrapper.INSTANCE.getMyPlaylists();
+        if (myPlaylists != null
+                && Helpers.containsIf(myPlaylists.getMediaItems(), group -> Helpers.equals(group.getPlaylistId(), playlistId))) {
             super.removePlaylist(playlistId);
-        } catch (IllegalStateException e) {
-            List<PlaylistInfo> playlistInfos = super.getPlaylistsInfo(null);
-            if (Helpers.containsIf(playlistInfos,
-                    playlistInfo -> Helpers.equals(playlistInfo.getPlaylistId(), playlistId))) {
-                throw e;
-            }
-        } finally {
-            PlaylistGroupServiceImpl.removePlaylistGroup(playlistId);
         }
     }
 
