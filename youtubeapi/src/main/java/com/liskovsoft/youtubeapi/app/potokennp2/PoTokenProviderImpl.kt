@@ -9,6 +9,7 @@ import com.liskovsoft.sharedutils.mylogger.Log
 import com.liskovsoft.youtubeapi.app.AppService
 import com.liskovsoft.youtubeapi.app.potokennp2.generators.PoTokenWebView
 import com.liskovsoft.youtubeapi.app.potokennp2.core.BadWebViewException
+import com.liskovsoft.youtubeapi.app.potokennp2.core.PoTokenException
 import com.liskovsoft.youtubeapi.app.potokennp2.core.PoTokenGenerator
 import com.liskovsoft.youtubeapi.app.potokennp2.visitor.VisitorService
 import java.util.concurrent.CountDownLatch
@@ -73,6 +74,8 @@ internal object PoTokenProviderImpl : PoTokenProvider {
                         Handler(Looper.getMainLooper()).post {
                             try {
                                 it.close()
+                            } catch (_: Exception) {
+                                // NullPointerException: android.webkit.WebViewClassic.clearHistory (WebViewClassic.java:3670)
                             } finally {
                                 latch?.countDown()
                             }
@@ -90,13 +93,19 @@ internal object PoTokenProviderImpl : PoTokenProvider {
                     webPoTokenGenerator = try {
                         (poTokenFactory ?: PoTokenWebView)
                             .newPoTokenGenerator(context)
-                    } catch (e: BadWebViewException) {
-                        // BadWebViewException - Error invoking onRunBotguardResult
-                        // PoTokenWebView2/3 may fail due to too many requests. Switching to the default variant.
-                        if (poTokenFactory != null && poTokenFactory != PoTokenWebView)
-                            PoTokenWebView.newPoTokenGenerator(context)
-                        else
-                            throw e
+                    } catch (e: Exception) {
+                        when (e) {
+                            is BadWebViewException, is PoTokenException -> {
+                                // BadWebViewException: Error invoking onRunBotguardResult
+                                // PoTokenException: mintCallback is not defined
+                                // PoTokenWebView2/3 may fail due to too many requests. Switching to the default variant.
+                                if (poTokenFactory != null && poTokenFactory != PoTokenWebView)
+                                    PoTokenWebView.newPoTokenGenerator(context)
+                                else
+                                    throw e
+                            }
+                            else -> throw e
+                        }
                     }
 
                     // The streaming poToken needs to be generated exactly once before generating

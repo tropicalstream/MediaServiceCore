@@ -201,6 +201,8 @@ internal class PoTokenWebView3 private constructor(
                 """try {
                         getMinter = webPoSignalOutput[0]
                         mintCallback = getMinter($integrityToken)
+                        if (typeof mintCallback === 'undefined')
+                            $JS_INTERFACE.onJsInitializationError("mintCallback is not defined")
                         ${JS_INTERFACE}.onJsInitializationDone($expirationTimeInSeconds)
                         webPoSignalOutput = null
                         getMinter = null
