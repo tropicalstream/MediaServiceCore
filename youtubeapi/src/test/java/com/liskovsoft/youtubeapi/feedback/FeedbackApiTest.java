@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowLog;
 import retrofit2.Call;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
@@ -37,6 +38,16 @@ public class FeedbackApiTest {
 
         FeedbackResponse feedbackResponse = RetrofitHelper.get(wrapper);
 
-        assertTrue("Feedback successful", feedbackResponse.isFeedbackProcessed());
+        assertTrue("Feedback successful", feedbackResponse.isProcessed());
+    }
+
+    @Test
+    public void testThatReasonsNotEmpty() {
+        Call<FeedbackResponse> wrapper = mService.setNotInterested(FeedbackApiHelper.getNotInterestedQuery(SAMPLE_TOKEN));
+
+        FeedbackResponse feedbackResponse = RetrofitHelper.get(wrapper);
+
+        assertNotNull("Has dialog title", feedbackResponse.getTitle());
+        assertNotNull("Has reasons", feedbackResponse.getReasons());
     }
 }

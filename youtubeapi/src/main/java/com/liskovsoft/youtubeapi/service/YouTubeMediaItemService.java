@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.data.DeArrowData;
 import com.liskovsoft.mediaserviceinterfaces.data.DislikeData;
+import com.liskovsoft.mediaserviceinterfaces.data.FeedbackReasons;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
@@ -22,7 +23,6 @@ import com.liskovsoft.youtubeapi.block.data.SegmentList;
 import com.liskovsoft.youtubeapi.common.models.impl.mediaitem.BaseMediaItem;
 import com.liskovsoft.youtubeapi.dearrow.DeArrowService;
 import com.liskovsoft.youtubeapi.feedback.FeedbackService;
-import com.liskovsoft.youtubeapi.innertube.InnertubeService;
 import com.liskovsoft.youtubeapi.next.v2.WatchNextService;
 import com.liskovsoft.youtubeapi.next.v2.WatchNextServiceWrapper;
 import com.liskovsoft.youtubeapi.playlist.PlaylistService;
@@ -328,6 +328,18 @@ public class YouTubeMediaItemService implements MediaItemService {
     @Override
     public Observable<Void> markAsNotInterestedObserve(String feedbackToken) {
         return RxHelper.fromRunnable(() -> markAsNotInterested(feedbackToken));
+    }
+
+    @Override
+    public FeedbackReasons getFeedbackReasons(String feedbackToken) {
+        checkSigned();
+
+        return getFeedbackService().getReasons(feedbackToken);
+    }
+
+    @Override
+    public Observable<FeedbackReasons> getFeedbackReasonsObserve(String feedbackToken) {
+        return RxHelper.fromCallable(() -> getFeedbackReasons(feedbackToken));
     }
 
     @Override
