@@ -43,23 +43,23 @@ internal object MediaServicePrefs: SharedPreferencesBase(AppService.instance().c
         mListeners.add(listener)
     }
 
-    //fun getData(key: String): String? {
-    //    return getString(getProfileDataKey(key), null)
-    //}
-    //
-    //fun setData(key: String, data: String?) {
-    //    putString(getProfileDataKey(key), data)
-    //}
+    // RayNeo fork: use old SharedModules prefs API (getString/putString) so we can keep
+    // MediaServiceCore bumped (search fix) without bumping SharedModules (which would break the 31.45 app).
+    private fun readData(key: String): String? {
+        return getString(key, null)
+    }
+
+    private fun writeData(key: String, data: String?) {
+        putString(key, data)
+    }
 
     fun getProfileData(key: String): String? {
-        return getData(getProfileDataKey(key))
+        return readData(getProfileDataKey(key))
     }
 
     fun setProfileData(key: String, data: String?) {
-        setData(getProfileDataKey(key), data)
+        writeData(getProfileDataKey(key), data)
     }
 
     private fun getProfileDataKey(dataKey: String) = "${mProfileName}_$dataKey"
-
-    override fun getPrefsDir(): String = PREF_NAME
 }
