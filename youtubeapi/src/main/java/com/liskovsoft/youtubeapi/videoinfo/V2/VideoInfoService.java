@@ -108,8 +108,27 @@ public class VideoInfoService extends VideoInfoServiceBase {
 
     private void moveFirst(AppClient client) {
         if (VIDEO_INFO_TYPE_LIST[0] != client) {
-            Helpers.move(VIDEO_INFO_TYPE_LIST, Arrays.asList(VIDEO_INFO_TYPE_LIST).indexOf(client), 0);
+            moveCompat(VIDEO_INFO_TYPE_LIST, Arrays.asList(VIDEO_INFO_TYPE_LIST).indexOf(client), 0);
         }
+    }
+
+    // RayNeo fork: old SharedModules' Helpers has no move(T[], int, int) (added upstream after
+    // our pinned SharedModules commit) — reimplement it here instead of bumping SharedModules
+    // (which would break the 31.45 app).
+    private static <T> void moveCompat(T[] array, int from, int to) {
+        if (from < 0 || to < 0 || from == to) {
+            return;
+        }
+
+        T item = array[from];
+
+        if (from < to) {
+            System.arraycopy(array, from + 1, array, from, to - from);
+        } else {
+            System.arraycopy(array, to, array, to + 1, from - to);
+        }
+
+        array[to] = item;
     }
 
     public VideoInfo getAuthVideoInfo(String videoId, String clickTrackingParams) {

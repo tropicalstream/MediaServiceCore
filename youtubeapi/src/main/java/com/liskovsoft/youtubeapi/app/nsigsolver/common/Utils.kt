@@ -44,7 +44,10 @@ internal fun persistToCache(fileName: String, content: String) {
     FileHelpers.stringToFile(content, File(getPersistentDir(), fileName))
 }
 
-private fun getPersistentDir() = FileHelpers.getFilesDir(AppService.instance().context)
+// RayNeo fork: old SharedModules' FileHelpers has no getFilesDir(Context) (added upstream after
+// our pinned SharedModules commit) — call Context.getFilesDir() directly instead of bumping
+// SharedModules (which would break the 31.45 app).
+private fun getPersistentDir(): File = AppService.instance().context.filesDir
 
 internal fun formatError(firstMsg: String?, secondMsg: String) = firstMsg?.let { "$it: $secondMsg" } ?: secondMsg
 

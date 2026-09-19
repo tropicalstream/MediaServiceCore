@@ -28,9 +28,22 @@ import com.liskovsoft.youtubeapi.app.potokennp2.misc.stringToU8
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.u8ToBase64
 import com.liskovsoft.youtubeapi.common.helpers.AppClient
 import io.reactivex.SingleEmitter
+import okhttp3.Response
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+
+// RayNeo fork: old SharedModules' OkHttpManager has no doRequest(url, headers, body, contentType)
+// overload (added upstream after our pinned SharedModules commit) — reproduce its GET/POST
+// dispatch here instead of bumping SharedModules (which would break the 31.45 app).
+private fun OkHttpManager.doRequestCompat(
+    url: String,
+    headers: Map<String, String>,
+    postBody: String?,
+    contentType: String?
+): Response {
+    return if (postBody == null) doGetRequest(url, headers) else doPostRequest(url, headers, postBody, contentType)
+}
 
 /**
  * V2 version of https://github.com/Brainicism/bgutil-ytdlp-pot-provider generator with my changes that fix request hanging.
@@ -432,7 +445,7 @@ internal class PoTokenWebView4 private constructor(
         data: String?,
         headers: Map<String, String> = emptyMap()
     ): String? {
-        val response = OkHttpManager.instance().doRequest(
+        val response = OkHttpManager.instance().doRequestCompat(
             url,
             mapOf(
                 // replace the downloader user agent
