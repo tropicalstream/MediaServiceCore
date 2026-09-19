@@ -5,6 +5,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo
 import com.liskovsoft.googlecommon.common.helpers.tests.TestHelpers
 import com.liskovsoft.sharedutils.prefs.GlobalPreferences
 import com.liskovsoft.youtubeapi.app.potokennp2.generators.PoTokenWebView3
+import com.liskovsoft.youtubeapi.app.potokennp2.generators.PoTokenWebView4
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager
 import org.junit.Assert
 import org.junit.Before
@@ -35,22 +36,44 @@ class PoTokenProviderImplTest {
     }
 
     @Test
-    fun testWebPoTokenIsNotEmpty2() {
+    fun testWebPoTokenIsNotEmpty3() {
         PoTokenProviderImpl.poTokenFactory = PoTokenWebView3
 
         assertWebPoTokenLength(124) // SABR pot length
     }
 
     @Test
-    fun testWebPoTokenOnEmptyVideoId2() {
+    fun testWebPoTokenOnEmptyVideoId3() {
         PoTokenProviderImpl.poTokenFactory = PoTokenWebView3
 
         assertWebPoTokenOnEmptyVideoId()
     }
 
     @Test
-    fun testPoTokenResponse2() {
+    fun testPoTokenResponse3() {
         PoTokenProviderImpl.poTokenFactory = PoTokenWebView3
+
+        assertPoTokenResponse()
+    }
+
+    @Test
+    fun testWebPoTokenIsNotEmpty4() {
+        PoTokenProviderImpl.poTokenFactory = PoTokenWebView4
+
+        // NOTE: the new pot is shorter
+        assertWebPoTokenLength(120) // SABR pot length
+    }
+
+    @Test
+    fun testWebPoTokenOnEmptyVideoId4() {
+        PoTokenProviderImpl.poTokenFactory = PoTokenWebView4
+
+        assertWebPoTokenOnEmptyVideoId()
+    }
+
+    @Test
+    fun testPoTokenResponse4() {
+        PoTokenProviderImpl.poTokenFactory = PoTokenWebView4
 
         assertPoTokenResponse()
     }
@@ -80,7 +103,7 @@ class PoTokenProviderImplTest {
         val mediaItemDetails: MediaItemFormatInfo =
             YouTubeServiceManager.instance().getMediaItemService().getFormatInfo(videoIdMusic)
 
-        val url = mediaItemDetails.adaptiveFormats[0].url
+        val url = mediaItemDetails.adaptiveFormats[0].url ?: mediaItemDetails.serverAbrStreamingUrl
 
         val webClientPoToken = PoTokenProviderImpl.getWebClientPoToken(videoIdMusic)
 

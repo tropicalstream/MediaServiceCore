@@ -8,8 +8,10 @@ import com.liskovsoft.youtubeapi.common.models.gen.ShowSheetCommand
 import com.liskovsoft.youtubeapi.common.models.gen.ThumbnailItem
 import com.liskovsoft.youtubeapi.common.models.gen.getBrowseId
 import com.liskovsoft.youtubeapi.common.models.gen.getContinuationToken
+import com.liskovsoft.youtubeapi.common.models.gen.getFeedbackToken
 import com.liskovsoft.youtubeapi.common.models.gen.getParams
 import com.liskovsoft.youtubeapi.common.models.gen.getFeedbackTokens
+import com.liskovsoft.youtubeapi.common.models.gen.getItems
 import com.liskovsoft.youtubeapi.common.models.gen.getSubtitle
 import com.liskovsoft.youtubeapi.common.models.gen.getSuggestToken
 import com.liskovsoft.youtubeapi.common.models.gen.getText
@@ -147,11 +149,11 @@ private const val CHIP_TYPE_DROP_DOWN = "CHIP_VIEW_MODEL_DISPLAY_TYPE_DROP_DOWN"
 private const val CHIP_TYPE_UNSPECIFIED = "CHIP_VIEW_MODEL_DISPLAY_TYPE_UNSPECIFIED"
 
 internal fun ChipBarViewModel.getChips(): List<ChipItemWrapper?>? = chips?.let {
-    it.firstOrNull()?.chipViewModel?.tapCommand?.innertubeCommand?.showSheetCommand?.getItems()
+    it.firstOrNull()?.chipViewModel?.tapCommand?.innertubeCommand?.getItems()
 } ?: chips
 
 internal fun ChipViewModel.getTitle() = text
-internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand?.continuationCommand?.token
+internal fun ChipViewModel.getContinuationToken() = tapCommand?.innertubeCommand?.getContinuationToken()
 
 /////
 
@@ -329,7 +331,7 @@ internal fun List<Shelf?>.getItems(): List<ItemWrapper?> {
 internal fun ShowSheetCommand.getItems() = panelLoadingStrategy?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems
 internal fun ShowSheetCommand.getFeedbackTokens() = panelLoadingStrategy
     ?.inlineContent?.sheetViewModel?.content?.listViewModel?.listItems?.mapNotNull {
-        it?.listItemViewModel?.rendererContext?.commandContext?.onTap?.innertubeCommand?.feedbackEndpoint?.feedbackToken
+        it?.listItemViewModel?.rendererContext?.commandContext?.onTap?.innertubeCommand?.getFeedbackToken()
     }
 
 //////////

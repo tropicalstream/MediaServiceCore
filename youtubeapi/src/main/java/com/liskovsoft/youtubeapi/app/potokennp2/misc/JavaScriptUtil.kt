@@ -7,6 +7,7 @@ import com.liskovsoft.sharedutils.okhttp.OkHttpManager
 import com.liskovsoft.youtubeapi.app.potokennp2.core.PoTokenException
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.toByteString
+import java.util.regex.Pattern
 
 /**
  * Parses the raw challenge data obtained from the Create endpoint and returns an object that can be
@@ -84,6 +85,99 @@ internal fun parseDescrambledChallengeData(rawChallengeData: String): String {
             .done()
     )
 }
+
+/**
+ * ```text
+ * --- PATCH(unstem 2026-08): homepage challenge + ytcfg (BgUtils#44) ------
+ * parseLooseJSON vendored from LuanRT/BgUtils v4.0.3 (MIT). The ytAtN
+ * payload is JS-object-literal-ish, not strict JSON.
+ * ```
+ */
+internal fun parseLooseJSON(looseJson: String): Map<String, String> {
+    val hexPattern = Pattern.compile("""\\x([0-9A-Fa-f]{2})""")
+    val hexMatcher = hexPattern.matcher(looseJson)
+
+    val sanitizedString = buildString {
+        var lastEnd = 0
+
+        while (hexMatcher.find()) {
+            append(looseJson, lastEnd, hexMatcher.start())
+            append(hexMatcher.group(1)!!.toInt(16).toChar())
+            lastEnd = hexMatcher.end()
+        }
+
+        append(looseJson, lastEnd, looseJson.length)
+    }
+
+    val trailingCommaPattern = Pattern.compile(""",\s*([\]}])""")
+    val trailingCommaMatcher = trailingCommaPattern.matcher(sanitizedString)
+    var jsonStr = trailingCommaMatcher.replaceAll("$1")
+
+    val singleQuotePattern = Pattern.compile("""'((?:[^'\\]|\\[\s\S])*)'""")
+    val singleQuoteMatcher = singleQuotePattern.matcher(jsonStr)
+
+    jsonStr = buildString {
+        var lastEnd = 0
+
+        while (singleQuoteMatcher.find()) {
+            append(jsonStr, lastEnd, singleQuoteMatcher.start())
+
+            val innerStr = singleQuoteMatcher.group(1)!!
+                .replace("""\'""", "'")
+
+            append(quoteJson(innerStr))
+
+            lastEnd = singleQuoteMatcher.end()
+        }
+
+        append(jsonStr, lastEnd, jsonStr.length)
+    }
+
+    val unquotedKeyPattern = Pattern.compile("""([{,]\s*)([a-zA-Z0-9_$]+)\s*:""")
+    val unquotedKeyMatcher = unquotedKeyPattern.matcher(jsonStr)
+    jsonStr = unquotedKeyMatcher.replaceAll("""$1"$2":""")
+
+    val parsedData = JsonParser.`object`().from(jsonStr)
+    val result = LinkedHashMap<String, String>()
+
+    for ((key, value) in parsedData) {
+        result[key] = when (value) {
+            null -> "null"
+            else -> value.toString()
+        }
+    }
+
+    return result
+}
+
+private fun quoteJson(value: String): String =
+    buildString {
+        append('"')
+        for (char in value) {
+            when (char) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\b' -> append("\\b")
+                '\u000C' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> {
+                    if (char.code < 0x20) {
+                        // Securely escape raw control chars to match RFC spec
+                        //append("\\u%04x".format(char.code))
+                        append("\\u00")
+                        // Fast hex conversion for values 0-31 without allocations
+                        append("0123456789abcdef"[char.code ushr 4])
+                        append("0123456789abcdef"[char.code and 0x0F])
+                    } else {
+                        append(char)
+                    }
+                }
+            }
+        }
+        append('"')
+    }
 
 /**
  * Parses the raw integrity token data obtained from the GenerateIT endpoint to a JavaScript

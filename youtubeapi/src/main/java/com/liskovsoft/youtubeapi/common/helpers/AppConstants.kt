@@ -3,7 +3,20 @@ package com.liskovsoft.youtubeapi.common.helpers
 internal object AppConstants {
     @JvmField
     val playerUrls = listOf(
-        // NOTE: tv player should be in the top (ias ones may not validate correctly)
+        // NOTE: TV player should be in the top (ias ones may not validate correctly)
+        "https://www.youtube.com/s/player/4fd832e7/tv-player-es6.vflset/tv-player-es6.js",
+        "https://www.youtube.com/s/player/4fd832e7/tv-player-es6-tcl.vflset/tv-player-es6-tcl.js", // not compatible with WEB, TV's unique decipher routines
+        "https://www.youtube.com/s/player/1c642fb9/tv-player-es6.vflset/tv-player-es6.js",
+        "https://www.youtube.com/s/player/1c642fb9/tv-player-es6-tcl.vflset/tv-player-es6-tcl.js", // not compatible with WEB, TV's unique decipher routines
+        "https://www.youtube.com/s/player/8c3fda2d/tv-player-es6.vflset/tv-player-es6.js",
+        "https://www.youtube.com/s/player/8c3fda2d/tv-player-es6-tcl.vflset/tv-player-es6-tcl.js", // not compatible with WEB, TV's unique decipher routines
+        "https://www.youtube.com/s/player/f572e43c/tv-player-es6.vflset/tv-player-es6.js",
+        "https://www.youtube.com/s/player/f572e43c/tv-player-es6-tcl.vflset/tv-player-es6-tcl.js", // not compatible with WEB, TV's unique decipher routines
+        "https://www.youtube.com/s/player/e937390a/tv-player-es6.vflset/tv-player-es6.js",
+        "https://www.youtube.com/s/player/e937390a/tv-player-es6-tcl.vflset/tv-player-es6-tcl.js", // not compatible with WEB, TV's unique decipher routines
+        "https://www.youtube.com/s/player/06ab6907/tv-player-es6.vflset/tv-player-es6.js", // the recent one with common nParam among all the clients
+        "https://www.youtube.com/s/player/854a788e/player_es6.vflset/en_US/base.js",
+        "https://www.youtube.com/s/player/b81a9a58/tv-player-es6.vflset/tv-player-es6.js",
         "https://www.youtube.com/s/player/c2f7551f/tv-player-es6.vflset/tv-player-es6.js",
         "https://www.youtube.com/s/player/8180e7ff/tv-player-es6.vflset/tv-player-es6.js",
         "https://www.youtube.com/s/player/76ad2fe8/tv-player-ias.vflset/tv-player-ias.js",

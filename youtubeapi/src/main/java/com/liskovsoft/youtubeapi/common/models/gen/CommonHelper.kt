@@ -10,6 +10,7 @@ import com.liskovsoft.googlecommon.common.helpers.ServiceHelper
 import com.liskovsoft.sharedutils.helpers.Helpers
 import com.liskovsoft.youtubeapi.browse.v2.gen.getFeedbackToken
 import com.liskovsoft.youtubeapi.browse.v2.gen.getFeedbackTokens
+import com.liskovsoft.youtubeapi.browse.v2.gen.getItems
 import com.liskovsoft.youtubeapi.next.v2.gen.getContinuationToken
 
 // A badge before the image
@@ -243,8 +244,8 @@ internal fun ChannelItem.getSubTitle() = subscriberCountText?.getText()
 
 internal fun ShortsItem.getTitle() = overlayMetadata?.primaryText?.getText()
 internal fun ShortsItem.getSubTitle() = overlayMetadata?.secondaryText?.getText()
-internal fun ShortsItem.getVideoId() = onTap?.innertubeCommand?.reelWatchEndpoint?.getVideoId()
-internal fun ShortsItem.getThumbnails() = onTap?.innertubeCommand?.reelWatchEndpoint?.getThumbnails()
+internal fun ShortsItem.getVideoId() = onTap?.innertubeCommand?.getVideoId()
+internal fun ShortsItem.getThumbnails() = onTap?.innertubeCommand?.getThumbnails()
 
 ////////////
 
@@ -265,7 +266,7 @@ internal fun LockupItem.getPercentWatched() = getOverlays()?.firstNotNullOfOrNul
 // The video without a badge, probably Watch again
 internal fun LockupItem.isEmpty() = getPercentWatched() == 100 && getBadgeText() == null
 internal fun LockupItem.getFeedbackTokens() =
-    metadata?.lockupMetadataViewModel?.menuButton?.buttonViewModel?.onTap?.innertubeCommand?.showSheetCommand?.getFeedbackTokens()
+    metadata?.lockupMetadataViewModel?.menuButton?.buttonViewModel?.onTap?.innertubeCommand?.getFeedbackTokens()
 internal fun LockupItem.getChannelId() = rendererContext?.getBrowseId()
 private fun LockupItem.getBadge() = getOverlays()?.firstNotNullOfOrNull { it?.thumbnailOverlayBadgeViewModel?.thumbnailBadges
     ?: it?.thumbnailBottomOverlayViewModel?.badges }?.firstNotNullOfOrNull { it?.thumbnailBadgeViewModel }
@@ -408,8 +409,19 @@ internal fun ResponseContext.getSuggestToken(): String? = serviceTrackingParams?
 
 //////
 
-internal fun RendererContext.getVideoId() = getOnTapCommand()?.watchEndpoint?.videoId
-internal fun RendererContext.getPlaylistId() = getOnTapCommand()?.watchEndpoint?.playlistId
-internal fun RendererContext.getBrowseId() = getOnTapCommand()?.browseEndpoint?.browseId
-internal fun RendererContext.getContinuationToken() = getOnTapCommand()?.commandExecutorCommand?.getContinuationToken()
+internal fun RendererContext.getVideoId() = getOnTapCommand()?.getVideoId()
+internal fun RendererContext.getPlaylistId() = getOnTapCommand()?.getPlaylistId()
+internal fun RendererContext.getBrowseId() = getOnTapCommand()?.getBrowseId()
+internal fun RendererContext.getContinuationToken() = getOnTapCommand()?.getContinuationToken()
 private fun RendererContext.getOnTapCommand() = commandContext?.onTap?.innertubeCommand
+
+///////
+
+internal fun InnertubeCommand.getVideoId() = watchEndpoint?.videoId ?: reelWatchEndpoint?.videoId
+internal fun InnertubeCommand.getPlaylistId() = watchEndpoint?.playlistId
+internal fun InnertubeCommand.getBrowseId() = browseEndpoint?.browseId
+internal fun InnertubeCommand.getContinuationToken() = continuationCommand?.token ?: commandExecutorCommand?.getContinuationToken()
+internal fun InnertubeCommand.getThumbnails() = reelWatchEndpoint?.getThumbnails()
+internal fun InnertubeCommand.getFeedbackToken() = feedbackEndpoint?.feedbackToken
+internal fun InnertubeCommand.getFeedbackTokens() = showSheetCommand?.getFeedbackTokens()
+internal fun InnertubeCommand.getItems() = showSheetCommand?.getItems()

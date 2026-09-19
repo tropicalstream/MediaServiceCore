@@ -18,35 +18,41 @@ import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfo;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfoHls;
 import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfoReel;
 
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
 
 public class VideoInfoService extends VideoInfoServiceBase {
     private static final String TAG = VideoInfoService.class.getSimpleName();
+    private static final AppClient IOS_CLIENT = AppClient.VISIONOS;
+    private static final AppClient TV_CLIENT = AppClient.TV_DOWNGRADED;
+    private static final AppClient WEB_CLIENT = AppClient.WEB_EMBED;
     private static VideoInfoService sInstance;
     private final VideoInfoApi mVideoInfoApi;
+    // TODO: TV clients are broken because of recently introduced '-tcl' player variant (different nParam and nSignature)
     private final static AppClient[] VIDEO_INFO_TYPE_LIST = {
             AppClient.WEB_EMBED, // Restricted (18+) videos
-            AppClient.ANDROID_VR, // doesn't require pot and cipher (often hangs?)
-            AppClient.ANDROID_REEL, // doesn't require pot and cipher
-            AppClient.TV, // Supports auth. Fixes "please sign in" bug!
+            AppClient.VISIONOS, // no url formats
+            AppClient.TV_DOWNGRADED, // works with old UAs like old Cobalt and old Xbox (non-tcl players)
+            //AppClient.TV, // Supports auth. Fixes "please sign in" bug! (the best for Premium users)
+            //AppClient.ANDROID_REEL, // doesn't require pot and cipher (hangs on all engines)
             AppClient.WEB, // Fix video clip blocked in current location
             AppClient.WEB_SAFARI,
             AppClient.IOS,
             AppClient.GEO, // Fix video clip blocked in current location
             AppClient.MWEB, // single audio language
-            AppClient.TV_LEGACY,
-            AppClient.TV_DOWNGRADED,
-            AppClient.TV_EMBED, // single audio language
-            AppClient.TV_SIMPLY, // hangs?
-            //AppClient.ANDROID_SDK_LESS, // doesn't require pot (hangs on cronet!)
+            //AppClient.TV_LEGACY,
+            //AppClient.TV_EMBED, // single audio language
+            AppClient.ANDROID_VR, // doesn't require pot and cipher (often hangs?)
+            //AppClient.TV_SIMPLY, // hangs?
+            //AppClient.ANDROID_SDK_LESS, // doesn't require pot (hangs on Cronet!)
     };
     @Nullable
     private AppClient mActualInfoType = null;
     @Nullable
     private AppClient mNextInfoType = null;
-    private boolean mAuthBlock;
+    private boolean mUseAuth;
     private List<TranslationLanguage> mCachedTranslationLanguages;
     private boolean mIsUnplayable;
 
@@ -68,10 +74,11 @@ public class VideoInfoService extends VideoInfoServiceBase {
         }
 
         //initInfoTypeIfNeeded();
+        //reorderTypeListIfNeeded();
 
         AppService.instance().resetClientPlaybackNonce(); // unique value per each video info
 
-        mAuthBlock = true;
+        mUseAuth = true;
 
         VideoInfo result = firstPlayable(videoId, clickTrackingParams);
 
@@ -91,21 +98,35 @@ public class VideoInfoService extends VideoInfoServiceBase {
         return result;
     }
 
+    private void reorderTypeListIfNeeded() {
+        if (getData().isFormatEnabled(MediaServiceData.FORMATS_EXTENDED_HLS)) {
+            moveFirst(IOS_CLIENT);
+        } else {
+            moveFirst(WEB_CLIENT);
+        }
+    }
+
+    private void moveFirst(AppClient client) {
+        if (VIDEO_INFO_TYPE_LIST[0] != client) {
+            Helpers.move(VIDEO_INFO_TYPE_LIST, Arrays.asList(VIDEO_INFO_TYPE_LIST).indexOf(client), 0);
+        }
+    }
+
     public VideoInfo getAuthVideoInfo(String videoId, String clickTrackingParams) {
         if (videoId == null) {
             return null;
         }
 
-        mAuthBlock = true;
+        mUseAuth = true;
 
-        // Only the tv client supports auth features
+        // Only the TV client supports auth features
         return getVideoInfo(AppClient.TV, videoId, clickTrackingParams);
     }
 
     private VideoInfo firstPlayable(String videoId, String clickTrackingParams) {
         VideoInfo result = firstInfoWith(videoId, clickTrackingParams, info -> !info.isUnplayable());
 
-        return result != null ? result : firstInfoWith(videoId, clickTrackingParams, info -> true);
+        return result != null ? result : firstInfoWith(videoId, clickTrackingParams, info -> info.getRegularFormats() != null);
     }
 
     private interface InfoTester {
@@ -138,7 +159,12 @@ public class VideoInfoService extends VideoInfoServiceBase {
     //    restoreVideoInfoType();
     //}
 
-    public void switchNextFormat() {
+    public void switchNextFormat(boolean force) {
+        if (force) {
+            nextVideoInfoType();
+            return;
+        }
+
         //initInfoTypeIfNeeded();
 
         // Try to reset pot cache for the last video
@@ -184,7 +210,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
         VideoInfo result;
 
         if (client == AppClient.INITIAL) {
-            result = InitialResponseService.getVideoInfo(videoId, mAuthBlock);
+            result = InitialResponseService.getVideoInfo(videoId, client.isAuthSupported() && mUseAuth);
         } else {
             String videoInfoQuery = VideoInfoApiHelper.getVideoInfoQuery(client, videoId, clickTrackingParams);
             result = getVideoInfo(client, videoInfoQuery);
@@ -198,7 +224,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
     }
 
     private VideoInfo getVideoInfo(AppClient client, String videoInfoQuery) {
-        boolean auth = client.isAuthSupported() && mAuthBlock;
+        boolean auth = client.isAuthSupported() && mUseAuth;
 
         if (client.isReelClient()) {
             Call<VideoInfoReel> wrapper = mVideoInfoApi.getVideoInfoReel(videoInfoQuery, mAppService.getVisitorData(),
@@ -236,15 +262,15 @@ public class VideoInfoService extends VideoInfoServiceBase {
     }
 
     private VideoInfoHls getVideoInfoIOSHls(String videoId, String clickTrackingParams) {
-        String videoInfoQuery = VideoInfoApiHelper.getVideoInfoQuery(AppClient.IOS, videoId, clickTrackingParams);
-        return getVideoInfoHls(AppClient.IOS, videoInfoQuery);
+        String videoInfoQuery = VideoInfoApiHelper.getVideoInfoQuery(IOS_CLIENT, videoId, clickTrackingParams);
+        return getVideoInfoHls(IOS_CLIENT, videoInfoQuery);
     }
 
     private VideoInfoHls getVideoInfoHls(AppClient client, String videoInfoQuery) {
         Call<VideoInfoHls> wrapper = mVideoInfoApi.getVideoInfoHls(videoInfoQuery, mAppService.getVisitorData(),
                 client.getUserAgent(), client.getInnerTubeName(), client.getClientVersion());
 
-        return RetrofitHelper.get(wrapper, client.isAuthSupported() && mAuthBlock);
+        return RetrofitHelper.get(wrapper, client.isAuthSupported() && mUseAuth);
     }
 
     private void applyFixesIfNeeded(VideoInfo result, String videoId, String clickTrackingParams) {
@@ -252,9 +278,11 @@ public class VideoInfoService extends VideoInfoServiceBase {
             return;
         }
 
+        boolean oldUseAuth = mUseAuth;
+
         if (shouldObtainExtendedFormats(result) || result.isStoryboardBroken()) {
             Log.d(TAG, "Enable high bitrate formats...");
-            mAuthBlock = false;
+            mUseAuth = false;
             VideoInfoHls videoInfoHls = getVideoInfoIOSHls(videoId, clickTrackingParams);
             if (videoInfoHls != null && shouldObtainExtendedFormats(result)) {
                 result.setHlsManifestUrl(videoInfoHls.getHlsManifestUrl());
@@ -269,7 +297,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
             Log.d(TAG, "Enable full list of auto generated subtitles...");
 
             if (mCachedTranslationLanguages == null || mCachedTranslationLanguages.size() < 100) {
-                mAuthBlock = false;
+                mUseAuth = false;
                 VideoInfo webInfo = null;
                 try {
                     webInfo = getVideoInfo(AppClient.WEB, videoId, clickTrackingParams);
@@ -285,6 +313,8 @@ public class VideoInfoService extends VideoInfoServiceBase {
                 result.setTranslationLanguages(mCachedTranslationLanguages);
             }
         }
+
+        mUseAuth = oldUseAuth;
     }
 
     //private void restoreVideoInfoType() {

@@ -27,9 +27,9 @@ import kotlin.Triple;
 
 public class MediaServiceData {
     private static final String TAG = MediaServiceData.class.getSimpleName();
-    public static final int FORMATS_NONE = 0;
+    private static final int FORMATS_NONE = 0;
     public static final int FORMATS_ALL = Integer.MAX_VALUE;
-    public static final int FORMATS_DASH = 1;
+    public static final int FORMATS_ADAPTIVE = 1;
     public static final int FORMATS_URL = 1 << 1;
     public static final int FORMATS_EXTENDED_HLS = 1 << 2;
     public static final int CONTENT_NONE = 0;
@@ -47,9 +47,10 @@ public class MediaServiceData {
     public static final int CONTENT_UPCOMING_SUBSCRIPTIONS = 1 << 11;
     public static final int CONTENT_STREAMS_SUBSCRIPTIONS = 1 << 12;
     public static final int CONTENT_SHORTS_CHANNEL = 1 << 13;
+    public static final int CONTENT_SHORTS_NEWS = 1 << 14;
     public static final int CONTENT_SHORTS_ALL = CONTENT_SHORTS_HOME | CONTENT_SHORTS_SEARCH
-            | CONTENT_SHORTS_SUBSCRIPTIONS | CONTENT_SHORTS_HISTORY
-            | CONTENT_SHORTS_TRENDING | CONTENT_SHORTS_CHANNEL;
+            | CONTENT_SHORTS_SUBSCRIPTIONS | CONTENT_SHORTS_HISTORY | CONTENT_SHORTS_TRENDING
+            | CONTENT_SHORTS_CHANNEL | CONTENT_SHORTS_NEWS;
     private static MediaServiceData sInstance;
     private String mScreenId;
     private String mDeviceId;
@@ -183,7 +184,7 @@ public class MediaServiceData {
 
     public boolean isFormatEnabled(int formats) {
         if (mEnabledFormats == FORMATS_NONE) {
-            setFormatEnabled(FORMATS_DASH | FORMATS_URL, true);
+            setFormatEnabled(FORMATS_ADAPTIVE, true);
         }
 
         return (mEnabledFormats & formats) == formats;
@@ -303,14 +304,14 @@ public class MediaServiceData {
         mVideoInfoType = Helpers.parseInt(split, 4, -1);
         //mSkipAuth = Helpers.parseBoolean(split, 5);
         // entries here moved to the cache
-        mEnabledFormats = Helpers.parseInt(split, 11, FORMATS_DASH | FORMATS_URL);
+        mEnabledFormats = Helpers.parseInt(split, 11, FORMATS_ADAPTIVE);
         // null
         mPoToken = Helpers.parseItem(split, 14, PoTokenResponse::fromString);
         mAppInfo = Helpers.parseItem(split, 15, AppInfoCached::fromString);
         mPlayerData = Helpers.parseItem(split, 16, PlayerDataCached::fromString);
         mClientData = Helpers.parseItem(split, 17, ClientDataCached::fromString);
         mHiddenContent = Helpers.parseInt(split, 18,
-                CONTENT_SHORTS_SUBSCRIPTIONS | CONTENT_SHORTS_HISTORY | CONTENT_UPCOMING_HOME);
+                CONTENT_SHORTS_SUBSCRIPTIONS | CONTENT_SHORTS_HISTORY | CONTENT_SHORTS_NEWS | CONTENT_UPCOMING_HOME);
         mIsMoreSubtitlesUnlocked = Helpers.parseBoolean(split, 19);
         //mIsPremiumFixEnabled = Helpers.parseBoolean(split, 20);
         mVisitorCookie = Helpers.parseStr(split, 21);

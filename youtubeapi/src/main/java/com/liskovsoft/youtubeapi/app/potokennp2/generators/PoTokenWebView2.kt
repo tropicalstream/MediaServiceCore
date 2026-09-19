@@ -30,6 +30,9 @@ import io.reactivex.SingleEmitter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+/**
+ * V1 generator based on https://github.com/Brainicism/bgutil-ytdlp-pot-provider
+ */
 internal class PoTokenWebView2 private constructor(
     context: Context,
     private var onInitDone: () -> Unit
@@ -437,10 +440,11 @@ internal class PoTokenWebView2 private constructor(
                 potWv.loadHtmlAndObtainBotguard(context)
             }
 
-            latch.await(20, TimeUnit.SECONDS)
+            val completed = latch.await(20, TimeUnit.SECONDS)
 
             initError?.let { throw it }
             potWv.initError?.let { throw it }
+            if (!completed) throw PoTokenException("${TAG}: failed to initialize within the specified time")
 
             return potWv
         }

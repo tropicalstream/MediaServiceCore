@@ -30,6 +30,12 @@ import io.reactivex.SingleEmitter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+/**
+ * The same as PoTokenWebView2 but with the below fix.
+ * 
+ * Using "https://www.youtube.com/api/jnn/v1/GenerateIT" instead of  
+ * "$BASE_URL/\$rpc/google.internal.waa.v1.Waa/GenerateIT" because the first one often hangs.
+ */
 internal class PoTokenWebView3 private constructor(
     context: Context,
     private var onInitDone: () -> Unit
@@ -439,10 +445,11 @@ internal class PoTokenWebView3 private constructor(
                 potWv.loadHtmlAndObtainBotguard(context)
             }
 
-            latch.await(20, TimeUnit.SECONDS)
+            val completed = latch.await(20, TimeUnit.SECONDS)
 
             initError?.let { throw it }
             potWv.initError?.let { throw it }
+            if (!completed) throw PoTokenException("${TAG}: failed to initialize within the specified time")
 
             return potWv
         }

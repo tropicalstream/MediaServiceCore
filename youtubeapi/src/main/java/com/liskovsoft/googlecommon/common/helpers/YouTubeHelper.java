@@ -295,4 +295,25 @@ public final class YouTubeHelper {
     public static String generateCPNParameter() {
         return RandomStringFromAlphabetGenerator.generate(16);
     }
+
+    /**
+     * New YT implementation of CPN
+     */
+    @NonNull
+    public static String generateCPNParameter2() {
+        return RandomStringFromAlphabetGenerator.generate2(16);
+    }
+
+    @Nullable
+    public static String getSabrLanguage(String audioTrackId, boolean isAutoDubbed, boolean isDefaultAudio) {
+        if (audioTrackId == null) {
+            return null;
+        }
+
+        String lang = audioTrackId.split("\\.")[0];
+        // original, descriptive, dubbed, dubbed-auto, secondary
+        String acont = isAutoDubbed ? "dubbed-auto" : isDefaultAudio ? "original" : "dubbed";
+
+        return String.format("%s (%s)", exoNameFix(lang), acont);
+    }
 }

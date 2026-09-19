@@ -20,19 +20,24 @@ import com.liskovsoft.youtubeapi.app.potokennp2.core.buildExceptionForJsError
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.evaluateJavascriptLegacy
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.hasThermalServiceBug
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.hasUsbServiceBug
-import com.liskovsoft.youtubeapi.app.potokennp2.misc.parseChallengeData
+import com.liskovsoft.youtubeapi.app.potokennp2.misc.parseDescrambledChallengeData
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.parseIntegrityTokenData
+import com.liskovsoft.youtubeapi.app.potokennp2.misc.parseLooseJSON
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.potLibPrefix
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.stringToU8
 import com.liskovsoft.youtubeapi.app.potokennp2.misc.u8ToBase64
+import com.liskovsoft.youtubeapi.common.helpers.AppClient
 import io.reactivex.SingleEmitter
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 /**
- * Original generator taken from NewPipe project. It is outdated and probably not working at all.
+ * V2 version of https://github.com/Brainicism/bgutil-ytdlp-pot-provider generator with my changes that fix request hanging.
+ *
+ * The changes compared to V1: https://github.com/Brainicism/bgutil-ytdlp-pot-provider/pull/243/changes
  */
-internal class PoTokenWebView private constructor(
+internal class PoTokenWebView4 private constructor(
     context: Context,
     private var onInitDone: () -> Unit
 ) : PoTokenGenerator {
@@ -66,7 +71,9 @@ internal class PoTokenWebView private constructor(
                     // indicates that there was a syntax error in the code, i.e. the WebView only
                     // supports a really old version of JS.
 
-                    val fmt = "\"${m.message()}\", source: ${m.sourceId()} (${m.lineNumber()})"
+                    val message = m.message()
+                        .removePrefix("Uncaught (in promise) ")
+                    val fmt = "\"$message\", source: ${m.sourceId()} (${m.lineNumber()})"
                     Log.e(TAG, "This WebView implementation is broken: $fmt")
 
                     // TODO: not needed anymore?
@@ -92,14 +99,14 @@ internal class PoTokenWebView private constructor(
     }
 
     /**
-     * Must be called right after instantiating [PoTokenWebView] to perform the actual
+     * Must be called right after instantiating [PoTokenWebView4] to perform the actual
      * initialization. This will asynchronously go through all the steps needed to load BotGuard,
      * run it, and obtain an `integrityToken`.
      */
     private fun loadHtmlAndObtainBotguard(context: Context) {
         Log.d(TAG, "loadHtmlAndObtainBotguard() called")
 
-        val html = context.assets.open("${potLibPrefix}po_token.html").bufferedReader()
+        val html = context.assets.open("${potLibPrefix}po_token2.html").bufferedReader()
             .use { it.readText() }
 
         webView.loadDataWithBaseURL(
@@ -123,20 +130,24 @@ internal class PoTokenWebView private constructor(
     fun downloadAndRunBotguard() {
         Log.d(TAG, "downloadAndRunBotguard() called")
 
-        val responseBody = makeBotguardServiceRequest(
-            "https://www.youtube.com/api/jnn/v1/Create",
-            "[ \"$REQUEST_KEY\" ]",
-        ) ?: return
-
-        val parsedChallengeData = parseChallengeData(responseBody)
+        // PATCH(unstem 2026-08): always mint from the homepage's
+        // (ytcfg, ytAtN) pair — plugin-passed challenges lack their
+        // page's ytcfg/EVENT_ID and /att/get tokens are rejected.
+        // BotGuard reads yt.config_.EVENT_ID
+        // NOTE: with ytcfg pot becomes smaller: 120 chars instead of regular 124
+        val (parsedChallengeData, ytcfg) = getChallengeFromHomepage() ?: getLegacyChallengeData() ?: return
 
         runOnMainThread {
             webView.evaluateJavascriptLegacy(
                 """try {
-                    data = $parsedChallengeData
-                    runBotGuard(data).then(function (result) {
-                        this.webPoSignalOutput = result.webPoSignalOutput
-                        $JS_INTERFACE.onRunBotguardResult(result.botguardResponse)
+                    if ($ytcfg)
+                        yt = { config_: $ytcfg }
+                    runBotGuard($parsedChallengeData).then(function (result) {
+                        webPoSignalOutput = result.webPoSignalOutput
+                        if (!webPoSignalOutput.length)
+                            $JS_INTERFACE.onJsInitializationError("webPoSignalOutput is empty")
+                        else
+                            $JS_INTERFACE.onRunBotguardResult(result.botguardResponse)
                     }, function (error) {
                         $JS_INTERFACE.onJsInitializationError(error + "\n" + error.stack)
                     })
@@ -149,14 +160,103 @@ internal class PoTokenWebView private constructor(
     }
 
     /**
+     * ```text
+     * PATCH(unstem 2026-08): fetch the YT homepage (through the caller's
+     * proxy) and extract a self-consistent (ytcfg, ytAtN challenge) pair.
+     * Injects yt.config_ into the BotGuard global object so the snapshot
+     * sees EVENT_ID. Returns undefined on any failure (caller falls back).
+     * ```
+     */
+    private fun getChallengeFromHomepage(): Pair<String, String?>? {
+        val pageHtml = makeBotguardServiceRequest(
+            "https://www.youtube.com",
+            null,
+            mapOf(
+                "accept" to "*/*",
+                "accept-language" to "en-US,en;q=0.7",
+                "user-agent" to USER_AGENT,
+            )
+        ) ?: return null
+
+        val ytcfgPattern = Pattern.compile("""ytcfg\.set\((\{.+?\})\);""", Pattern.DOTALL)
+        val ytcfgMatcher = ytcfgPattern.matcher(pageHtml)
+        val ytcfg: String?
+
+        if (ytcfgMatcher.find()) {
+            // NOTE: with ytcfg pot becomes smaller: 120 chars instead of regular 124
+            ytcfg = ytcfgMatcher.group(1)!!
+
+            // Usage example in node.js:
+            // const ytObj = { config_: JSON.parse(ytcfgMatch[1] as string) };
+            // const g: any = globalThis as any;
+            // g.yt = ytObj; // BotGuard reads yt.config_.EVENT_ID
+            // if (g.window) g.window.yt = ytObj;
+        } else {
+            ytcfg = null
+            Log.w(TAG, "homepage-challenge: no ytcfg found (EVENT_ID missing)")
+        }
+
+        val attPattern = Pattern.compile("""window\.ytAtN\(\s*(\{[\s\S]*?\})\s*\)""")
+        val attMatcher = attPattern.matcher(pageHtml)
+
+        if (!attMatcher.find()) {
+            Log.w(TAG, "homepage-challenge: no ytAtN challenge in page")
+            return null // In Kotlin, use null instead of undefined
+        }
+
+        val attData = parseLooseJSON(attMatcher.group(1)!!)
+
+        val rawChallengeData = attData["R"]
+
+        if (rawChallengeData == null || !rawChallengeData.contains("bgChallenge")
+                || !rawChallengeData.contains("program")
+                || !rawChallengeData.contains("interpreterUrl")) {
+            Log.w(TAG, "homepage-challenge: ytAtN payload missing bgChallenge")
+            return null
+        }
+
+        Log.d(TAG, "Using challenge from the homepage (patched)")
+
+        return Pair(parseDescrambledChallengeData(rawChallengeData), ytcfg)
+    }
+
+    /**
+     * Using challenge from /att/get (legacy fallback)
+     */
+    private fun getLegacyChallengeData(): Pair<String, String?>? {
+        val client = AppClient.WEB
+
+        val responseBody = makeBotguardServiceRequest(
+            "https://www.youtube.com/youtubei/v1/att/get?prettyPrint=false",
+            """
+                {
+                            context: {
+                                client: {
+                                    clientName: "${client.clientName}",
+                                    clientVersion: "${client.clientVersion}",
+                                },
+                            },
+                            engagementType: "ENGAGEMENT_TYPE_UNBOUND",
+                 }
+            """,
+            mapOf(
+                "Content-Type" to "application/json"
+            )
+        ) ?: return null
+
+        Log.d(TAG, "Using challenge from /att/get (legacy fallback)")
+
+        return Pair(parseDescrambledChallengeData(responseBody), null)
+    }
+
+    /**
      * Called during initialization by the JavaScript snippets from either
      * [downloadAndRunBotguard] or [onRunBotguardResult].
      */
     @JavascriptInterface
     fun onJsInitializationError(error: String) {
-        val msg = "onJsInitializationError: $error"
-        Log.e(TAG, msg)
-        onInitializationErrorCloseAndCancel(buildExceptionForJsError(msg))
+        Log.e(TAG, error)
+        onInitializationErrorCloseAndCancel(buildExceptionForJsError(error))
     }
 
     /**
@@ -167,9 +267,13 @@ internal class PoTokenWebView private constructor(
     fun onRunBotguardResult(botguardResponse: String) {
         Log.d(TAG, "botguardResponse: $botguardResponse")
 
+        // NOTE: both urls can be used to get botguard response.
+        // The first on produces more reliable token (without 403 error) but may hang upon request.
+        // "$BASE_URL/\$rpc/google.internal.waa.v1.Waa/GenerateIT"
+        // "https://www.youtube.com/api/jnn/v1/GenerateIT"
         val responseBody = makeBotguardServiceRequest(
             "https://www.youtube.com/api/jnn/v1/GenerateIT",
-            "[ \"$REQUEST_KEY\", \"$botguardResponse\" ]",
+            "[ \"${REQUEST_KEY}\", \"$botguardResponse\" ]",
         ) ?: return
 
         Log.d(TAG, "GenerateIT response: $responseBody")
@@ -182,8 +286,17 @@ internal class PoTokenWebView private constructor(
 
         runOnMainThread {
             webView.evaluateJavascriptLegacy(
-                """this.integrityToken = $integrityToken
-                   ${JS_INTERFACE}.onJsInitializationDone($expirationTimeInSeconds)""",
+                """try {
+                        getMinter = webPoSignalOutput[0]
+                        mintCallback = getMinter($integrityToken)
+                        if (typeof mintCallback === 'undefined')
+                            $JS_INTERFACE.onJsInitializationError("mintCallback is not defined")
+                        ${JS_INTERFACE}.onJsInitializationDone($expirationTimeInSeconds)
+                        webPoSignalOutput = null
+                        getMinter = null
+                    } catch (error) {
+                        ${JS_INTERFACE}.onJsInitializationError(error + "\n" + error.stack)
+                    }""",
                 null
             )
         }
@@ -212,23 +325,23 @@ internal class PoTokenWebView private constructor(
         runOnMainThread {
             webView.evaluateJavascriptLegacy(
                 """try {
-                        identifier = "$identifier"
-                        u8Identifier = $u8Identifier
-                        poTokenU8 = obtainPoToken(webPoSignalOutput, integrityToken, u8Identifier)
+                        poTokenU8 = obtainPoToken($u8Identifier)
                         poTokenU8String = ""
                         for (i = 0; i < poTokenU8.length; i++) {
                             if (i != 0) poTokenU8String += ","
                             poTokenU8String += poTokenU8[i]
                         }
-                        $JS_INTERFACE.onObtainPoTokenResult(identifier, poTokenU8String)
+                        $JS_INTERFACE.onObtainPoTokenResult("$identifier", poTokenU8String)
+                        poTokenU8 = null
+                        poTokenU8String = null
                     } catch (error) {
-                        $JS_INTERFACE.onObtainPoTokenError(identifier, error + "\n" + error.stack)
+                        $JS_INTERFACE.onObtainPoTokenError("$identifier", error + "\n" + error.stack)
                     }""",
                 null
             )
         }
 
-        latch.await()
+        latch.await(10, TimeUnit.SECONDS)
 
         initError?.let { throw it }
 
@@ -316,9 +429,10 @@ internal class PoTokenWebView private constructor(
      */
     private fun makeBotguardServiceRequest(
         url: String,
-        data: String
+        data: String?,
+        headers: Map<String, String> = emptyMap()
     ): String? {
-        val response = OkHttpManager.instance().doPostRequest(
+        val response = OkHttpManager.instance().doRequest(
             url,
             mapOf(
                 // replace the downloader user agent
@@ -327,7 +441,7 @@ internal class PoTokenWebView private constructor(
                 "Content-Type" to "application/json+protobuf",
                 "x-goog-api-key" to GOOGLE_API_KEY,
                 "x-user-agent" to "grpc-web-javascript/0.1",
-            ),
+            ) + headers,
             data,
             null
         )
@@ -378,13 +492,15 @@ internal class PoTokenWebView private constructor(
     //endregion
 
     companion object : PoTokenGenerator.Factory {
-        private val TAG = PoTokenWebView::class.simpleName
+        private val TAG = PoTokenWebView4::class.simpleName
         // Public API key used by BotGuard, which has been got by looking at BotGuard requests
         private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw" // NOSONAR
         private const val REQUEST_KEY = "O43z0dpjhgX20SCx4KAo"
-        private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
+        private const val USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36(KHTML, like Gecko)"
+        //private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+        //    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
         private const val JS_INTERFACE = "PoTokenWebView"
+        private const val BASE_URL = "https://jnn-pa.googleapis.com"
 
         override fun newPoTokenGenerator(context: Context): PoTokenGenerator {
             if (hasThermalServiceBug(context)) {
@@ -397,12 +513,12 @@ internal class PoTokenWebView private constructor(
 
             val latch = CountDownLatch(1)
 
-            lateinit var potWv: PoTokenWebView
+            lateinit var potWv: PoTokenWebView4
             var initError: Throwable? = null
 
             runOnMainThread {
                 potWv = try {
-                    PoTokenWebView(context) { latch.countDown() }
+                    PoTokenWebView4(context) { latch.countDown() }
                 } catch (e: Throwable) {
                     initError = BadWebViewException("${e::class.simpleName}: ${e.message}")
                     latch.countDown()
@@ -411,10 +527,11 @@ internal class PoTokenWebView private constructor(
                 potWv.loadHtmlAndObtainBotguard(context)
             }
 
-            latch.await(20, TimeUnit.SECONDS)
+            val completed = latch.await(20, TimeUnit.SECONDS)
 
             initError?.let { throw it }
             potWv.initError?.let { throw it }
+            if (!completed) throw PoTokenException("${TAG}: failed to initialize within the specified time")
 
             return potWv
         }

@@ -95,13 +95,19 @@ public class YouTubeServiceManager implements ServiceManager {
     }
 
     @Override
-    public void applyNoPlaybackFix() {
+    public void switchNextClient() {
         getYouTubeMediaItemService().invalidateCache();
-        getVideoInfoService().switchNextFormat();
+        getVideoInfoService().switchNextFormat(false);
     }
 
     @Override
-    public void applySubtitleFix() {
+    public void switchNextClientNow() {
+        getYouTubeMediaItemService().invalidateCache();
+        getVideoInfoService().switchNextFormat(true);
+    }
+
+    @Override
+    public void switchNextSubsFormat() {
         getYouTubeMediaItemService().invalidateCache();
         getVideoInfoService().switchNextSubtitle();
     }
